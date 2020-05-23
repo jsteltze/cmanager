@@ -147,6 +147,11 @@ jar {
     }
 }
 
+// Fix the encoding on Windows systems.
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
 // Formatter options.
 googleJavaFormat {
     // Use the Android style which uses 4 spaces for indentation.

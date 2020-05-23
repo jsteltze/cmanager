@@ -1,6 +1,10 @@
 package cmanager.geo;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import cmanager.util.ObjectHelper;
 import org.junit.Test;
@@ -56,13 +60,13 @@ public class GeocacheTest {
         assertTrue(g.isOC());
         assertFalse(g.isGC());
         assertFalse(g.hasVolatileStart());
-        assertEquals(g.getURL(), "https://www.opencaching.de/OC1234");
+        assertEquals("https://www.opencaching.de/OC1234", g.getURL());
 
         g = new Geocache("GC1234", "test", new Coordinate(0, 0), 0.0, 0.0, "Tradi");
         assertTrue(g.isGC());
         assertFalse(g.isOC());
         assertFalse(g.hasVolatileStart());
-        assertEquals(g.getURL(), "https://www.geocaching.com/geocache/GC1234");
+        assertEquals("https://www.geocaching.com/geocache/GC1234", g.getURL());
 
         g = new Geocache("OC1234", "test", new Coordinate(0, 0), 0.0, 0.0, "Mystery");
         assertTrue(g.hasVolatileStart());
@@ -72,6 +76,6 @@ public class GeocacheTest {
     public void testSerialize() {
         final Geocache g = new Geocache("OC1234", "test", new Coordinate(0, 0), 0.0, 0.0, "Tradi");
         final Geocache g2 = ObjectHelper.copy(g);
-        assertTrue(g2 != null);
+        assertNotNull(g2);
     }
 }

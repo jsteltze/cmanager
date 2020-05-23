@@ -1,6 +1,6 @@
 package cmanager.geo;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.fail;
 
 import cmanager.geo.Coordinate.UnparsableException;
 import java.util.ArrayList;

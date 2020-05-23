@@ -1,6 +1,9 @@
 package cmanager.geo;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import cmanager.geo.Coordinate.UnparsableException;
 import org.junit.Test;
@@ -10,35 +13,35 @@ public class CoordinateTest {
     @Test
     public void test() {
         final Coordinate c1 = new Coordinate("1.23", "4.56");
-        assertEquals(c1.getLat(), 1.23, 0.0);
-        assertEquals(c1.getLon(), 4.56, 0.0);
+        assertEquals(1.23, c1.getLat(), 0.0);
+        assertEquals(4.56, c1.getLon(), 0.0);
 
         final Coordinate c2 = new Coordinate(1.23, 4.56);
-        assertEquals(c2.getLat(), 1.23, 0.0);
-        assertEquals(c2.getLon(), 4.56, 0.0);
-        assertEquals(c2.toString(), "1.23, 4.56");
+        assertEquals(1.23, c2.getLat(), 0.0);
+        assertEquals(4.56, c2.getLon(), 0.0);
+        assertEquals("1.23, 4.56", c2.toString());
 
         assertTrue(c1.equals(c2));
-        assertEquals(c1.distanceHaversine(c2), 0, 0);
+        assertEquals(0, c1.distanceHaversine(c2), 0);
 
         final Coordinate c3 = new Coordinate(1.23, 4.567);
         assertFalse(c1.equals(c3));
-        assertEquals(c1.distanceHaversine(c3), 778.1851, 0.00009);
-        assertEquals(c1.distanceHaversineRounded(c3), 778.185, 0);
+        assertEquals(778.1851, c1.distanceHaversine(c3), 0.00009);
+        assertEquals(778.185, c1.distanceHaversineRounded(c3), 0);
     }
 
     @Test
     public void testDistance() {
         final Coordinate c1 = new Coordinate(53.09780, 8.74908);
         final Coordinate c2 = new Coordinate(53.05735, 8.59148);
-        assertEquals(c1.distanceHaversine(c2), 11448.0325, 0.0009);
+        assertEquals(11448.0325, c1.distanceHaversine(c2), 0.0009);
     }
 
     private void parse(String string, double lat, double lon) {
         try {
             final Coordinate c = new Coordinate(string);
-            assertEquals(c.getLat(), lat, 0.0);
-            assertEquals(c.getLon(), lon, 0.00009);
+            assertEquals(lat, c.getLat(), 0.0);
+            assertEquals(lon, c.getLon(), 0.00009);
         } catch (UnparsableException e) {
             fail(e.getStackTrace().toString());
         }

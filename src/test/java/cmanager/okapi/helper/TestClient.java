@@ -57,13 +57,38 @@ public class TestClient implements TokenProviderI {
                                         "https://www.opencaching.de/okapi/apps/authorize?interactivity=minimal&oauth_token="
                                                 + oauth_token;
 
+                                // Open the authorization page.
                                 String response = null;
                                 try {
                                     response = http.get(url).getBody();
                                 } catch (IOException e) {
                                 }
 
-                                Matcher matcher =
+                                // If this application has not been authorized before, we will get a
+                                // form where we have to accept that the application will have
+                                // access to our account.
+                                // Previously this assumed that the application has been registered
+                                // manually beforehand, which in fact should nearly always be the
+                                // case. So we are sending the required POST request here manually
+                                // if needed.
+                                if (response.contains(
+                                        "<form id='authform' method='POST' class='form'>")) {
+                                    final List<NameValuePair> parameters = new ArrayList<>(3);
+                                    parameters.add(
+                                            new BasicNameValuePair("interactivity", "minimal"));
+                                    parameters.add(
+                                            new BasicNameValuePair("oauth_token", oauth_token));
+                                    parameters.add(
+                                            new BasicNameValuePair(
+                                                    "authorization_result", "granted"));
+                                    try {
+                                        response = http.post(url, parameters).getBody();
+                                    } catch (IOException | UnexpectedStatusCode e) {
+                                    }
+                                }
+
+                                // Retrieve the PIN value from the webpage.
+                                final Matcher matcher =
                                         Pattern.compile("<div class=\\'pin\\'>(\\d*)<\\/div>")
                                                 .matcher(response);
                                 matcher.find();
