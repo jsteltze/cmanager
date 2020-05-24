@@ -4,7 +4,7 @@ import cmanager.geo.Geocache;
 import cmanager.geo.GeocacheComparator;
 import cmanager.geo.GeocacheLog;
 import cmanager.oc.ShadowList;
-import cmanager.okapi.OKAPI;
+import cmanager.okapi.Okapi;
 import cmanager.okapi.User;
 import cmanager.okapi.responses.UnexpectedLogStatus;
 import cmanager.settings.Settings;
@@ -19,7 +19,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
-import java.util.ArrayList;
+import java.util.List;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -31,18 +31,16 @@ public class CopyLogDialog extends JFrame {
 
     private static final long serialVersionUID = 363313395887255591L;
 
-    private final JPanel contentPanel = new JPanel();
     private final CopyLogDialog THIS = this;
     private final JSplitPane splitPane1;
     private final JSplitPane splitPane2;
-    private final JPanel panelLogs;
     private final JScrollPane scrollPane;
 
     /** Create the dialog. */
     public CopyLogDialog(
             final Geocache gc,
             final Geocache oc,
-            final ArrayList<GeocacheLog> logsCopied,
+            final List<GeocacheLog> logsCopied,
             final ShadowList shadowList) {
         setResizable(true);
         Logo.setLogo(this);
@@ -50,6 +48,7 @@ public class CopyLogDialog extends JFrame {
         setTitle("Copy Logs");
         setBounds(100, 100, 850, 500);
         getContentPane().setLayout(new BorderLayout());
+        final JPanel contentPanel = new JPanel();
         contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
         getContentPane().add(contentPanel, BorderLayout.CENTER);
         contentPanel.setLayout(new BorderLayout(0, 0));
@@ -60,19 +59,19 @@ public class CopyLogDialog extends JFrame {
         splitPane2 = new JSplitPane();
         splitPane1.setRightComponent(splitPane2);
 
-        CachePanel cp = new CachePanel();
-        cp.setMinimumSize(new Dimension(100, 100));
-        cp.setCache(gc, false);
-        cp.colorize(oc);
-        splitPane1.setLeftComponent(cp);
+        CachePanel cachePanel = new CachePanel();
+        cachePanel.setMinimumSize(new Dimension(100, 100));
+        cachePanel.setCache(gc, false);
+        cachePanel.colorize(oc);
+        splitPane1.setLeftComponent(cachePanel);
 
-        cp = new CachePanel();
-        cp.setMinimumSize(new Dimension(100, 100));
-        cp.setCache(oc, false);
-        cp.colorize(gc);
-        splitPane2.setLeftComponent(cp);
+        cachePanel = new CachePanel();
+        cachePanel.setMinimumSize(new Dimension(100, 100));
+        cachePanel.setCache(oc, false);
+        cachePanel.colorize(gc);
+        splitPane2.setLeftComponent(cachePanel);
 
-        panelLogs = new JPanel();
+        final JPanel panelLogs = new JPanel();
         panelLogs.setLayout(new GridBagLayout());
 
         final GridBagConstraints gbc = new GridBagConstraints();
@@ -91,7 +90,7 @@ public class CopyLogDialog extends JFrame {
                 continue;
             }
 
-            final String gcUsername = Settings.getS(Settings.Key.GC_USERNAME);
+            final String gcUsername = Settings.getString(Settings.Key.GC_USERNAME);
             if (!log.isAuthor(gcUsername)) {
                 continue;
             }
@@ -100,10 +99,10 @@ public class CopyLogDialog extends JFrame {
             panelLogs.add(logPanel, gbc);
             gbc.gridy++;
 
-            final GridBagConstraints gbc_button = (GridBagConstraints) gbc.clone();
-            gbc_button.weighty = 0;
-            gbc_button.fill = 0;
-            gbc_button.insets = new Insets(0, 10, 10, 0);
+            final GridBagConstraints gbcButton = (GridBagConstraints) gbc.clone();
+            gbcButton.weighty = 0;
+            gbcButton.fill = 0;
+            gbcButton.insets = new Insets(0, 10, 10, 0);
             gbc.gridy++;
 
             final JButton button = new JButton("Copy log to opencaching.de");
@@ -113,27 +112,27 @@ public class CopyLogDialog extends JFrame {
             button.addActionListener(
                     new ActionListener() {
 
-                        public void actionPerformed(ActionEvent arg0) {
+                        public void actionPerformed(ActionEvent actionEvent) {
                             MainWindow.actionWithWaitDialog(
                                     new Runnable() {
                                         public void run() {
                                             try {
-                                                // contribute to shadow list
+                                                // Contribute to shadow list.
                                                 shadowList.postToShadowList(gc, oc);
 
-                                                // retrieve the new log text
+                                                // Retrieve the new log text.
                                                 log.setText(logPanel.getLogText());
 
-                                                // copy the log
-                                                OKAPI.postLog(User.getOKAPIUser(), oc, log);
+                                                // Copy the log.
+                                                Okapi.postLog(User.getOKAPIUser(), oc, log);
 
-                                                // disable the button as this log must have been
+                                                // Disable the button as this log must have been
                                                 // posted successfully (otherwise an exception would
                                                 // have occurred).
                                                 button.setVisible(false);
 
-                                                // remember that we copied the log so the user can
-                                                // not double post it by accident
+                                                // Remember that we copied the log so the user can
+                                                // not double post it by accident.
                                                 logsCopied.add(log);
                                             } catch (UnexpectedLogStatus exception) {
                                                 // Handle general log problems separately to provide
@@ -142,8 +141,8 @@ public class CopyLogDialog extends JFrame {
                                                         THIS,
                                                         exception.getResponseMessage(),
                                                         "Unexpected log status");
-                                            } catch (Throwable t) {
-                                                ExceptionPanel.showErrorDialog(THIS, t);
+                                            } catch (Throwable throwable) {
+                                                ExceptionPanel.showErrorDialog(THIS, throwable);
                                             }
                                         }
                                     },
@@ -160,13 +159,13 @@ public class CopyLogDialog extends JFrame {
                             return this;
                         }
                     }.set(oc, log, false));
-            panelLogs.add(button, gbc_button);
+            panelLogs.add(button, gbcButton);
         }
 
         scrollPane = new JScrollPane(panelLogs);
         scrollPane.addComponentListener(
                 new ComponentAdapter() {
-                    public void componentResized(ComponentEvent arg0) {
+                    public void componentResized(ComponentEvent componentEvent) {
                         scrollPane.getVerticalScrollBar().setValue(0);
                         scrollPane.getHorizontalScrollBar().setValue(0);
                     }
@@ -177,22 +176,22 @@ public class CopyLogDialog extends JFrame {
         buttonPane.setLayout(new FlowLayout(FlowLayout.RIGHT));
         getContentPane().add(buttonPane, BorderLayout.SOUTH);
 
-        final JButton btnReturn = new JButton("Return");
-        buttonPane.add(btnReturn);
-        btnReturn.addActionListener(
+        final JButton buttonReturn = new JButton("Return");
+        buttonPane.add(buttonReturn);
+        buttonReturn.addActionListener(
                 new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
+                    public void actionPerformed(ActionEvent actionEvent) {
                         THIS.setVisible(false);
                     }
                 });
 
         THIS.addComponentListener(
                 new ComponentAdapter() {
-                    public void componentShown(ComponentEvent e) {
+                    public void componentShown(ComponentEvent componentEvent) {
                         CacheListView.fixSplitPanes(splitPane1, splitPane2);
                     }
 
-                    public void componentResized(ComponentEvent e) {
+                    public void componentResized(ComponentEvent componentEvent) {
                         CacheListView.fixSplitPanes(splitPane1, splitPane2);
                     }
                 });

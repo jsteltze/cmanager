@@ -17,8 +17,8 @@ public class CustomJMapViewer extends JMapViewer {
 
     private static final long serialVersionUID = 7714507963907032312L;
 
-    private Point p1 = null;
-    private Point p2 = null;
+    private Point point1 = null;
+    private Point point2 = null;
 
     public CustomJMapViewer(TileCache cache) {
         super(cache);
@@ -35,26 +35,26 @@ public class CustomJMapViewer extends JMapViewer {
     }
 
     public void setPoints(Point p1, Point p2) {
-        this.p1 = p1;
-        this.p2 = p2;
+        this.point1 = p1;
+        this.point2 = p2;
         this.repaint();
     }
 
     @Override
-    public void paint(Graphics g) {
-        super.paint(g);
+    public void paint(Graphics graphics) {
+        super.paint(graphics);
 
-        if (p1 != null && p2 != null) {
-            final int x1 = p1.x < p2.x ? p1.x : p2.x;
-            final int x2 = p1.x >= p2.x ? p1.x : p2.x;
-            final int y1 = p1.y < p2.y ? p1.y : p2.y;
-            final int y2 = p1.y >= p2.y ? p1.y : p2.y;
+        if (point1 != null && point2 != null) {
+            final int x1 = Math.min(point1.x, point2.x);
+            final int x2 = Math.max(point1.x, point2.x);
+            final int y1 = Math.min(point1.y, point2.y);
+            final int y2 = Math.max(point1.y, point2.y);
 
-            final Graphics2D g2 = (Graphics2D) g;
-            g2.setStroke(new BasicStroke(2));
-            // g2.setColor(new Color(0x2554C7));
-            g2.draw(new Rectangle2D.Double(x1, y1, x2 - x1, y2 - y1));
-            g2.dispose();
+            final Graphics2D graphics2D = (Graphics2D) graphics;
+            graphics2D.setStroke(new BasicStroke(2));
+            // graphics2D.setColor(new Color(0x2554C7));
+            graphics2D.draw(new Rectangle2D.Double(x1, y1, x2 - x1, y2 - y1));
+            graphics2D.dispose();
         }
     }
 }

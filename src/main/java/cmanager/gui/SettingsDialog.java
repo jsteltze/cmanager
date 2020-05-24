@@ -1,7 +1,7 @@
 package cmanager.gui;
 
 import cmanager.global.Constants;
-import cmanager.okapi.OKAPI;
+import cmanager.okapi.Okapi;
 import cmanager.okapi.User;
 import cmanager.settings.Settings;
 import cmanager.util.DesktopUtil;
@@ -33,12 +33,11 @@ public class SettingsDialog extends JDialog {
     private static final long serialVersionUID = -6008083400079798934L;
 
     private final JDialog THIS = this;
-    private final JPanel contentPane;
-    private final JLabel lblOkapiToken;
-    private final JLabel lblOCUsername;
-    private final JButton btnRequestNewToken;
-    private final JTextField txtNameGC;
-    private final JTextField txtHeapSize;
+    private final JLabel labelOkapiToken;
+    private final JLabel labelUsernameOc;
+    private final JButton buttonRequestNewToken;
+    private final JTextField textUsernameGc;
+    private final JTextField textHeapSize;
 
     /** Create the frame. */
     public SettingsDialog(JFrame owner) {
@@ -46,7 +45,7 @@ public class SettingsDialog extends JDialog {
 
         setTitle("Settings");
         setBounds(100, 100, 450, 300);
-        contentPane = new JPanel();
+        final JPanel contentPane = new JPanel();
         contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
         setContentPane(contentPane);
         contentPane.setLayout(new BorderLayout(0, 0));
@@ -55,20 +54,20 @@ public class SettingsDialog extends JDialog {
         contentPane.add(panelButtons, BorderLayout.SOUTH);
         panelButtons.setLayout(new FlowLayout(FlowLayout.RIGHT, 5, 5));
 
-        final JButton btnSaveApply = new JButton("Save & Apply");
-        btnSaveApply.addActionListener(
+        final JButton buttonSaveApply = new JButton("Save & Apply");
+        buttonSaveApply.addActionListener(
                 new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
+                    public void actionPerformed(ActionEvent actionEvent) {
                         boolean changesWhichNeedRestart = false;
 
-                        final String newHeapSize = txtHeapSize.getText();
-                        final String oldHeapSize = Settings.getS(Settings.Key.HEAP_SIZE);
+                        final String newHeapSize = textHeapSize.getText();
+                        final String oldHeapSize = Settings.getString(Settings.Key.HEAP_SIZE);
                         if ((oldHeapSize != null && !oldHeapSize.equals(newHeapSize))
                                 || (oldHeapSize == null && newHeapSize.length() > 0)) {
                             changesWhichNeedRestart = true;
                         }
 
-                        Settings.set(Settings.Key.GC_USERNAME, txtNameGC.getText());
+                        Settings.set(Settings.Key.GC_USERNAME, textUsernameGc.getText());
                         Settings.set(Settings.Key.HEAP_SIZE, newHeapSize);
 
                         if (changesWhichNeedRestart) {
@@ -95,55 +94,57 @@ public class SettingsDialog extends JDialog {
                         THIS.setVisible(false);
                     }
                 });
-        panelButtons.add(btnSaveApply);
+        panelButtons.add(buttonSaveApply);
 
-        final JButton btnDiscard = new JButton("Discard");
-        btnDiscard.addActionListener(
+        final JButton buttonDiscard = new JButton("Discard");
+        buttonDiscard.addActionListener(
                 new ActionListener() {
-                    public void actionPerformed(ActionEvent arg0) {
+                    public void actionPerformed(ActionEvent actionEvent) {
                         THIS.setVisible(false);
                     }
                 });
-        panelButtons.add(btnDiscard);
+        panelButtons.add(buttonDiscard);
 
         final JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
         contentPane.add(tabbedPane, BorderLayout.CENTER);
 
-        final JPanel panelOC = new JPanel();
-        panelOC.setBorder(new EmptyBorder(10, 10, 10, 10));
-        tabbedPane.addTab("opencaching.de", null, panelOC, null);
-        final SpringLayout sl_panelOC = new SpringLayout();
-        panelOC.setLayout(sl_panelOC);
+        final JPanel panelOc = new JPanel();
+        panelOc.setBorder(new EmptyBorder(10, 10, 10, 10));
+        tabbedPane.addTab("opencaching.de", null, panelOc, null);
+        final SpringLayout springLayoutPanelOc = new SpringLayout();
+        panelOc.setLayout(springLayoutPanelOc);
 
-        final JLabel label = new JLabel("OKAPI Token:");
-        sl_panelOC.putConstraint(SpringLayout.NORTH, label, 40, SpringLayout.NORTH, panelOC);
-        sl_panelOC.putConstraint(SpringLayout.WEST, label, 10, SpringLayout.WEST, panelOC);
-        panelOC.add(label);
+        final JLabel labelOkapiTokenText = new JLabel("OKAPI Token:");
+        springLayoutPanelOc.putConstraint(
+                SpringLayout.NORTH, labelOkapiTokenText, 40, SpringLayout.NORTH, panelOc);
+        springLayoutPanelOc.putConstraint(
+                SpringLayout.WEST, labelOkapiTokenText, 10, SpringLayout.WEST, panelOc);
+        panelOc.add(labelOkapiTokenText);
 
-        lblOkapiToken = new JLabel("New label");
-        sl_panelOC.putConstraint(SpringLayout.NORTH, lblOkapiToken, 0, SpringLayout.NORTH, label);
-        sl_panelOC.putConstraint(SpringLayout.WEST, lblOkapiToken, 101, SpringLayout.EAST, label);
-        panelOC.add(lblOkapiToken);
+        labelOkapiToken = new JLabel("New label");
+        springLayoutPanelOc.putConstraint(
+                SpringLayout.NORTH, labelOkapiToken, 0, SpringLayout.NORTH, labelOkapiTokenText);
+        springLayoutPanelOc.putConstraint(
+                SpringLayout.WEST, labelOkapiToken, 101, SpringLayout.EAST, labelOkapiTokenText);
+        panelOc.add(labelOkapiToken);
 
-        btnRequestNewToken = new JButton("Request new token");
-        sl_panelOC.putConstraint(
-                SpringLayout.SOUTH, btnRequestNewToken, 0, SpringLayout.SOUTH, panelOC);
-        sl_panelOC.putConstraint(
-                SpringLayout.EAST, btnRequestNewToken, 0, SpringLayout.EAST, panelOC);
-        btnRequestNewToken.addActionListener(
+        buttonRequestNewToken = new JButton("Request new token");
+        springLayoutPanelOc.putConstraint(
+                SpringLayout.SOUTH, buttonRequestNewToken, 0, SpringLayout.SOUTH, panelOc);
+        springLayoutPanelOc.putConstraint(
+                SpringLayout.EAST, buttonRequestNewToken, 0, SpringLayout.EAST, panelOc);
+        buttonRequestNewToken.addActionListener(
                 new ActionListener() {
-                    public void actionPerformed(ActionEvent arg0) {
+                    public void actionPerformed(ActionEvent actionEvent) {
                         try {
                             User.getOKAPIUser()
                                     .requestOkapiToken(
-                                            new OKAPI.RequestAuthorizationCallbackI() {
+                                            new Okapi.RequestAuthorizationCallbackI() {
                                                 @Override
                                                 public String getPin() {
-                                                    final String pin =
-                                                            JOptionPane.showInputDialog(
-                                                                    null,
-                                                                    "Please look at your browser and enter the PIN from opencaching.de");
-                                                    return pin;
+                                                    return JOptionPane.showInputDialog(
+                                                            null,
+                                                            "Please look at your browser and enter the PIN from opencaching.de");
                                                 }
 
                                                 @Override
@@ -152,152 +153,161 @@ public class SettingsDialog extends JDialog {
                                                 }
                                             });
                             displayOkapiTokenStatus();
-                        } catch (Throwable e) {
-                            ExceptionPanel.showErrorDialog(THIS, e);
+                        } catch (Throwable throwable) {
+                            ExceptionPanel.showErrorDialog(THIS, throwable);
                         }
                     }
                 });
-        panelOC.add(btnRequestNewToken);
+        panelOc.add(buttonRequestNewToken);
 
-        final JLabel lblNewLabel_3 = new JLabel("OC Username: ");
-        sl_panelOC.putConstraint(SpringLayout.NORTH, lblNewLabel_3, 6, SpringLayout.SOUTH, label);
-        sl_panelOC.putConstraint(SpringLayout.WEST, lblNewLabel_3, 0, SpringLayout.WEST, label);
-        panelOC.add(lblNewLabel_3);
+        final JLabel labelUsernameOcText = new JLabel("OC Username: ");
+        springLayoutPanelOc.putConstraint(
+                SpringLayout.NORTH,
+                labelUsernameOcText,
+                6,
+                SpringLayout.SOUTH,
+                labelOkapiTokenText);
+        springLayoutPanelOc.putConstraint(
+                SpringLayout.WEST, labelUsernameOcText, 0, SpringLayout.WEST, labelOkapiTokenText);
+        panelOc.add(labelUsernameOcText);
 
-        lblOCUsername = new JLabel("");
-        sl_panelOC.putConstraint(
-                SpringLayout.NORTH, lblOCUsername, 6, SpringLayout.SOUTH, lblOkapiToken);
-        sl_panelOC.putConstraint(SpringLayout.WEST, lblOCUsername, 204, SpringLayout.WEST, panelOC);
-        sl_panelOC.putConstraint(SpringLayout.EAST, lblOCUsername, -31, SpringLayout.EAST, panelOC);
-        lblOCUsername.setHorizontalAlignment(SwingConstants.LEFT);
-        lblOCUsername.setText(Settings.getS(Settings.Key.OC_USERNAME));
-        panelOC.add(lblOCUsername);
+        labelUsernameOc = new JLabel("");
+        springLayoutPanelOc.putConstraint(
+                SpringLayout.NORTH, labelUsernameOc, 6, SpringLayout.SOUTH, labelOkapiToken);
+        springLayoutPanelOc.putConstraint(
+                SpringLayout.WEST, labelUsernameOc, 204, SpringLayout.WEST, panelOc);
+        springLayoutPanelOc.putConstraint(
+                SpringLayout.EAST, labelUsernameOc, -31, SpringLayout.EAST, panelOc);
+        labelUsernameOc.setHorizontalAlignment(SwingConstants.LEFT);
+        labelUsernameOc.setText(Settings.getString(Settings.Key.OC_USERNAME));
+        panelOc.add(labelUsernameOc);
 
-        final JPanel panelGC = new JPanel();
-        tabbedPane.addTab("geocaching.com", null, panelGC, null);
-        final GridBagLayout gbl_panelGC = new GridBagLayout();
-        gbl_panelGC.columnWidths = new int[] {215, 215, 0};
-        gbl_panelGC.rowHeights = new int[] {201, 0};
-        gbl_panelGC.columnWeights = new double[] {0.0, 0.0, Double.MIN_VALUE};
-        gbl_panelGC.rowWeights = new double[] {0.0, Double.MIN_VALUE};
-        panelGC.setLayout(gbl_panelGC);
+        final JPanel panelGc = new JPanel();
+        tabbedPane.addTab("geocaching.com", null, panelGc, null);
+        final GridBagLayout gblPanelGc = new GridBagLayout();
+        gblPanelGc.columnWidths = new int[] {215, 215, 0};
+        gblPanelGc.rowHeights = new int[] {201, 0};
+        gblPanelGc.columnWeights = new double[] {0.0, 0.0, Double.MIN_VALUE};
+        gblPanelGc.rowWeights = new double[] {0.0, Double.MIN_VALUE};
+        panelGc.setLayout(gblPanelGc);
 
-        final JLabel lblUsername = new JLabel("Username:");
-        final GridBagConstraints gbc_lblUsername = new GridBagConstraints();
-        gbc_lblUsername.gridwidth = 50;
-        gbc_lblUsername.anchor = GridBagConstraints.NORTHWEST;
-        gbc_lblUsername.insets = new Insets(20, 20, 0, 5);
-        gbc_lblUsername.gridx = 0;
-        gbc_lblUsername.gridy = 0;
-        panelGC.add(lblUsername, gbc_lblUsername);
+        final JLabel labelUsername = new JLabel("Username:");
+        final GridBagConstraints gbcLabelUsername = new GridBagConstraints();
+        gbcLabelUsername.gridwidth = 50;
+        gbcLabelUsername.anchor = GridBagConstraints.NORTHWEST;
+        gbcLabelUsername.insets = new Insets(20, 20, 0, 5);
+        gbcLabelUsername.gridx = 0;
+        gbcLabelUsername.gridy = 0;
+        panelGc.add(labelUsername, gbcLabelUsername);
 
-        txtNameGC = new JTextField();
-        final GridBagConstraints gbc_txtNameGC = new GridBagConstraints();
-        gbc_txtNameGC.weighty = 0.5;
-        gbc_txtNameGC.insets = new Insets(20, 0, 0, 0);
-        gbc_txtNameGC.anchor = GridBagConstraints.NORTH;
-        gbc_txtNameGC.fill = GridBagConstraints.HORIZONTAL;
-        gbc_txtNameGC.gridx = 1;
-        gbc_txtNameGC.gridy = 0;
-        panelGC.add(txtNameGC, gbc_txtNameGC);
-        txtNameGC.setColumns(10);
+        textUsernameGc = new JTextField();
+        final GridBagConstraints gbcTextUsernameGc = new GridBagConstraints();
+        gbcTextUsernameGc.weighty = 0.5;
+        gbcTextUsernameGc.insets = new Insets(20, 0, 0, 0);
+        gbcTextUsernameGc.anchor = GridBagConstraints.NORTH;
+        gbcTextUsernameGc.fill = GridBagConstraints.HORIZONTAL;
+        gbcTextUsernameGc.gridx = 1;
+        gbcTextUsernameGc.gridy = 0;
+        panelGc.add(textUsernameGc, gbcTextUsernameGc);
+        textUsernameGc.setColumns(10);
 
         displayOkapiTokenStatus();
-        txtNameGC.setText(Settings.getS(Settings.Key.GC_USERNAME));
+        textUsernameGc.setText(Settings.getString(Settings.Key.GC_USERNAME));
 
         final JPanel panelGeneral = new JPanel();
         panelGeneral.setBorder(new EmptyBorder(10, 10, 10, 10));
         tabbedPane.addTab("General", null, panelGeneral, null);
-        final GridBagLayout gbl_panelGeneral = new GridBagLayout();
-        gbl_panelGeneral.rowWeights = new double[] {0.0, 0.0, 0.0, 0.0, 0.0};
-        gbl_panelGeneral.columnWeights = new double[] {1.0, 1.0, 0.0};
-        panelGeneral.setLayout(gbl_panelGeneral);
+        final GridBagLayout gblPanelGeneral = new GridBagLayout();
+        gblPanelGeneral.rowWeights = new double[] {0.0, 0.0, 0.0, 0.0, 0.0};
+        gblPanelGeneral.columnWeights = new double[] {1.0, 1.0, 0.0};
+        panelGeneral.setLayout(gblPanelGeneral);
 
-        final Component verticalStrut_1 = Box.createVerticalStrut(20);
-        final GridBagConstraints gbc_verticalStrut_1 = new GridBagConstraints();
-        gbc_verticalStrut_1.weighty = 0.1;
-        gbc_verticalStrut_1.insets = new Insets(0, 0, 5, 5);
-        gbc_verticalStrut_1.gridx = 0;
-        gbc_verticalStrut_1.gridy = 0;
-        panelGeneral.add(verticalStrut_1, gbc_verticalStrut_1);
+        final Component verticalStrut1 = Box.createVerticalStrut(20);
+        final GridBagConstraints gbcVerticalStrut1 = new GridBagConstraints();
+        gbcVerticalStrut1.weighty = 0.1;
+        gbcVerticalStrut1.insets = new Insets(0, 0, 5, 5);
+        gbcVerticalStrut1.gridx = 0;
+        gbcVerticalStrut1.gridy = 0;
+        panelGeneral.add(verticalStrut1, gbcVerticalStrut1);
 
-        final JLabel lblCurrentHeapSize = new JLabel("$size");
-        final GridBagConstraints gbc_lblCurrentHeapSize = new GridBagConstraints();
-        gbc_lblCurrentHeapSize.insets = new Insets(0, 0, 5, 5);
-        gbc_lblCurrentHeapSize.gridx = 1;
-        gbc_lblCurrentHeapSize.gridy = 1;
-        panelGeneral.add(lblCurrentHeapSize, gbc_lblCurrentHeapSize);
-        lblCurrentHeapSize.setText(
+        final JLabel labelCurrentHeapSize = new JLabel("$size");
+        final GridBagConstraints gbcLabelCurrentHeapSize = new GridBagConstraints();
+        gbcLabelCurrentHeapSize.insets = new Insets(0, 0, 5, 5);
+        gbcLabelCurrentHeapSize.gridx = 1;
+        gbcLabelCurrentHeapSize.gridy = 1;
+        panelGeneral.add(labelCurrentHeapSize, gbcLabelCurrentHeapSize);
+        labelCurrentHeapSize.setText(
                 Long.valueOf(Runtime.getRuntime().maxMemory() / 1024 / 1024).toString());
 
         final Component verticalStrut = Box.createVerticalStrut(20);
-        final GridBagConstraints gbc_verticalStrut = new GridBagConstraints();
-        gbc_verticalStrut.weighty = 0.5;
-        gbc_verticalStrut.insets = new Insets(0, 0, 5, 5);
-        gbc_verticalStrut.gridx = 0;
-        gbc_verticalStrut.gridy = 3;
-        panelGeneral.add(verticalStrut, gbc_verticalStrut);
+        final GridBagConstraints gbcVerticalStrut = new GridBagConstraints();
+        gbcVerticalStrut.weighty = 0.5;
+        gbcVerticalStrut.insets = new Insets(0, 0, 5, 5);
+        gbcVerticalStrut.gridx = 0;
+        gbcVerticalStrut.gridy = 3;
+        panelGeneral.add(verticalStrut, gbcVerticalStrut);
 
-        final JLabel lblNewLabel_2 = new JLabel("(*) Application restart required.");
-        lblNewLabel_2.setFont(new Font("Dialog", Font.PLAIN, 11));
-        final GridBagConstraints gbc_lblNewLabel_2 = new GridBagConstraints();
-        gbc_lblNewLabel_2.gridwidth = 3;
-        gbc_lblNewLabel_2.anchor = GridBagConstraints.ABOVE_BASELINE;
-        gbc_lblNewLabel_2.gridx = 0;
-        gbc_lblNewLabel_2.gridy = 4;
-        panelGeneral.add(lblNewLabel_2, gbc_lblNewLabel_2);
+        final JLabel labelApplicationRestartRequired =
+                new JLabel("(*) Application restart required.");
+        labelApplicationRestartRequired.setFont(new Font("Dialog", Font.PLAIN, 11));
+        final GridBagConstraints gbcLabelApplicationRestartRequired = new GridBagConstraints();
+        gbcLabelApplicationRestartRequired.gridwidth = 3;
+        gbcLabelApplicationRestartRequired.anchor = GridBagConstraints.ABOVE_BASELINE;
+        gbcLabelApplicationRestartRequired.gridx = 0;
+        gbcLabelApplicationRestartRequired.gridy = 4;
+        panelGeneral.add(labelApplicationRestartRequired, gbcLabelApplicationRestartRequired);
 
-        txtHeapSize = new JTextField();
-        txtHeapSize.setHorizontalAlignment(SwingConstants.CENTER);
-        final GridBagConstraints gbc_textHeapSize = new GridBagConstraints();
-        gbc_textHeapSize.insets = new Insets(0, 0, 5, 0);
-        gbc_textHeapSize.gridwidth = 2;
-        gbc_textHeapSize.weightx = 1.0;
-        gbc_textHeapSize.anchor = GridBagConstraints.NORTHWEST;
-        gbc_textHeapSize.gridx = 1;
-        gbc_textHeapSize.gridy = 2;
-        gbc_textHeapSize.fill = GridBagConstraints.HORIZONTAL;
-        panelGeneral.add(txtHeapSize, gbc_textHeapSize);
-        txtHeapSize.setColumns(10);
-        txtHeapSize.setText(Settings.getS(Settings.Key.HEAP_SIZE));
+        textHeapSize = new JTextField();
+        textHeapSize.setHorizontalAlignment(SwingConstants.CENTER);
+        final GridBagConstraints gbcTextHeapSize = new GridBagConstraints();
+        gbcTextHeapSize.insets = new Insets(0, 0, 5, 0);
+        gbcTextHeapSize.gridwidth = 2;
+        gbcTextHeapSize.weightx = 1.0;
+        gbcTextHeapSize.anchor = GridBagConstraints.NORTHWEST;
+        gbcTextHeapSize.gridx = 1;
+        gbcTextHeapSize.gridy = 2;
+        gbcTextHeapSize.fill = GridBagConstraints.HORIZONTAL;
+        panelGeneral.add(textHeapSize, gbcTextHeapSize);
+        textHeapSize.setColumns(10);
+        textHeapSize.setText(Settings.getString(Settings.Key.HEAP_SIZE));
 
-        final JLabel lblNewLabel = new JLabel("Heap size* (MB):");
-        lblNewLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        final GridBagConstraints gbc_lblNewLabel = new GridBagConstraints();
-        gbc_lblNewLabel.insets = new Insets(0, 0, 5, 5);
-        gbc_lblNewLabel.anchor = GridBagConstraints.NORTHWEST;
-        gbc_lblNewLabel.gridy = 2;
-        gbc_lblNewLabel.gridx = 0;
-        gbc_lblNewLabel.fill = GridBagConstraints.HORIZONTAL;
-        panelGeneral.add(lblNewLabel, gbc_lblNewLabel);
+        final JLabel labelHeapSizeText = new JLabel("Heap size* (MB):");
+        labelHeapSizeText.setHorizontalAlignment(SwingConstants.CENTER);
+        final GridBagConstraints gbcLabelHeapSizeText = new GridBagConstraints();
+        gbcLabelHeapSizeText.insets = new Insets(0, 0, 5, 5);
+        gbcLabelHeapSizeText.anchor = GridBagConstraints.NORTHWEST;
+        gbcLabelHeapSizeText.gridy = 2;
+        gbcLabelHeapSizeText.gridx = 0;
+        gbcLabelHeapSizeText.fill = GridBagConstraints.HORIZONTAL;
+        panelGeneral.add(labelHeapSizeText, gbcLabelHeapSizeText);
 
-        final JLabel lblNewLabel_1 = new JLabel("Current heap size (MB):");
-        final GridBagConstraints gbc_lblNewLabel_1 = new GridBagConstraints();
-        gbc_lblNewLabel_1.insets = new Insets(0, 0, 5, 5);
-        gbc_lblNewLabel_1.gridx = 0;
-        gbc_lblNewLabel_1.gridy = 1;
-        panelGeneral.add(lblNewLabel_1, gbc_lblNewLabel_1);
+        final JLabel labelCurrentHeapSizeText = new JLabel("Current heap size (MB):");
+        final GridBagConstraints gbcLabelCurrentHeapSizeText = new GridBagConstraints();
+        gbcLabelCurrentHeapSizeText.insets = new Insets(0, 0, 5, 5);
+        gbcLabelCurrentHeapSizeText.gridx = 0;
+        gbcLabelCurrentHeapSizeText.gridy = 1;
+        panelGeneral.add(labelCurrentHeapSizeText, gbcLabelCurrentHeapSizeText);
     }
 
     private void displayOkapiTokenStatus() {
-        lblOkapiToken.setText("missing or offline");
-        Font f = lblOkapiToken.getFont();
-        lblOkapiToken.setFont(f.deriveFont(f.getStyle() | Font.ITALIC));
-        btnRequestNewToken.setVisible(true);
+        labelOkapiToken.setText("missing or offline");
+        Font font = labelOkapiToken.getFont();
+        labelOkapiToken.setFont(font.deriveFont(font.getStyle() | Font.ITALIC));
+        buttonRequestNewToken.setVisible(true);
 
         final User user = User.getOKAPIUser();
         try {
-            if (user.getOkapiToken() != null && OKAPI.getUUID(user) != null) {
-                lblOkapiToken.setText("okay");
-                f = lblOkapiToken.getFont();
-                lblOkapiToken.setFont(f.deriveFont(f.getStyle() & ~Font.ITALIC));
-                btnRequestNewToken.setVisible(false);
+            if (user.getOkapiToken() != null && Okapi.getUuid(user) != null) {
+                labelOkapiToken.setText("okay");
+                font = labelOkapiToken.getFont();
+                labelOkapiToken.setFont(font.deriveFont(font.getStyle() & ~Font.ITALIC));
+                buttonRequestNewToken.setVisible(false);
 
-                final String username = OKAPI.getUsername(user);
+                final String username = Okapi.getUsername(user);
                 Settings.set(Settings.Key.OC_USERNAME, username);
-                lblOCUsername.setText(username);
+                labelUsernameOc.setText(username);
             }
-        } catch (Exception e) {
+        } catch (Exception ignored) {
         }
     }
 }

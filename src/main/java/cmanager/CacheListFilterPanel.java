@@ -8,6 +8,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
+import java.util.List;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -26,33 +27,32 @@ public abstract class CacheListFilterPanel extends JPanel {
     private static final long serialVersionUID = -6181151635761995945L;
 
     private final CacheListFilterPanel THIS = this;
-    private JComboBox<Double> leftComboBox;
-    private JComboBox<Double> rightComboBox;
-    private JLabel lblLeft;
-    private JLabel lblRight;
-    private final JButton btnRemove;
+    private JComboBox<Double> comboBoxLeft;
+    private JComboBox<Double> comboBoxRight;
+    private JLabel labelLeft;
+    private JLabel labelRight;
+    private final JButton buttonRemove;
 
     protected boolean inverted = false;
-    protected JPanel panel_1;
-    private final JButton btnUpdate;
-    private final JToggleButton tglbtnInvert;
-    protected JPanel panel_2;
-    protected JLabel lblLeft2;
+    protected JPanel panel1;
+    private final JButton buttonUpdate;
+    private final JToggleButton toggleButtonInvert;
+    protected JPanel panel2;
+    protected JLabel labelLeft2;
     protected JTextField textField;
-    private final JPanel panel_4;
 
-    private final ArrayList<Runnable> runOnRemove = new ArrayList<>();
+    private final List<Runnable> runOnRemove = new ArrayList<>();
     protected Runnable runDoModelUpdateNow = null;
-    protected final ArrayList<Runnable> runOnFilterUpdate = new ArrayList<>();
+    protected final List<Runnable> runOnFilterUpdate = new ArrayList<>();
 
     /** Create the panel. */
     public CacheListFilterPanel(FILTER_TYPE filterType) {
-        KeyAdapter keyEnterUpdate =
+        final KeyAdapter keyEnterUpdate =
                 new KeyAdapter() {
                     @Override
-                    public void keyPressed(KeyEvent arg0) {
-                        if (arg0.getKeyCode() == KeyEvent.VK_ENTER) {
-                            btnUpdate.doClick();
+                    public void keyPressed(KeyEvent keyEvent) {
+                        if (keyEvent.getKeyCode() == KeyEvent.VK_ENTER) {
+                            buttonUpdate.doClick();
                         }
                     }
                 };
@@ -67,113 +67,113 @@ public abstract class CacheListFilterPanel extends JPanel {
         panel.add(panelButtons, BorderLayout.EAST);
         panelButtons.setLayout(new BorderLayout(0, 0));
 
-        final JPanel panel_3 = new JPanel();
-        panelButtons.add(panel_3);
+        final JPanel panel3 = new JPanel();
+        panelButtons.add(panel3);
 
-        btnUpdate = new JButton("Update");
-        btnUpdate.addActionListener(
+        buttonUpdate = new JButton("Update");
+        buttonUpdate.addActionListener(
                 new ActionListener() {
-                    public void actionPerformed(ActionEvent arg0) {
+                    public void actionPerformed(ActionEvent actionEvent) {
                         runDoModelUpdateNow.run();
-                        for (Runnable action : runOnFilterUpdate) {
+                        for (final Runnable action : runOnFilterUpdate) {
                             action.run();
                         }
                     }
                 });
 
-        tglbtnInvert = new JToggleButton("Invert");
-        tglbtnInvert.addActionListener(
+        toggleButtonInvert = new JToggleButton("Invert");
+        toggleButtonInvert.addActionListener(
                 new ActionListener() {
-                    public void actionPerformed(ActionEvent arg0) {
-                        inverted = tglbtnInvert.isSelected();
+                    public void actionPerformed(ActionEvent actionEvent) {
+                        inverted = toggleButtonInvert.isSelected();
                         runDoModelUpdateNow.run();
-                        for (Runnable action : runOnFilterUpdate) {
+                        for (final Runnable action : runOnFilterUpdate) {
                             action.run();
                         }
                     }
                 });
 
-        btnRemove = new JButton("X");
-        btnRemove.addActionListener(
+        buttonRemove = new JButton("X");
+        buttonRemove.addActionListener(
                 new ActionListener() {
-                    public void actionPerformed(ActionEvent arg0) {
+                    public void actionPerformed(ActionEvent actionEvent) {
                         final Container parent = THIS.getParent();
                         parent.remove(THIS);
                         parent.revalidate();
 
-                        for (Runnable action : runOnRemove) {
+                        for (final Runnable action : runOnRemove) {
                             action.run();
                         }
                     }
                 });
 
-        panel_3.add(tglbtnInvert);
-        panel_3.add(btnUpdate);
-        panel_3.add(btnRemove);
+        panel3.add(toggleButtonInvert);
+        panel3.add(buttonUpdate);
+        panel3.add(buttonRemove);
 
-        panel_4 = new JPanel();
-        panel.add(panel_4, BorderLayout.CENTER);
-        panel_4.setLayout(new BoxLayout(panel_4, BoxLayout.Y_AXIS));
+        final JPanel panel4 = new JPanel();
+        panel.add(panel4, BorderLayout.CENTER);
+        panel4.setLayout(new BoxLayout(panel4, BoxLayout.Y_AXIS));
 
         if (filterType == FILTER_TYPE.SINGLE_FILTER_VALUE) {
-            panel_2 = new JPanel();
-            panel_4.add(panel_2);
-            panel_2.setLayout(new BorderLayout(5, 10));
+            panel2 = new JPanel();
+            panel4.add(panel2);
+            panel2.setLayout(new BorderLayout(5, 10));
 
-            lblLeft2 = new JLabel("New label");
-            panel_2.add(lblLeft2, BorderLayout.WEST);
+            labelLeft2 = new JLabel("New label");
+            panel2.add(labelLeft2, BorderLayout.WEST);
 
             textField = new JTextField();
-            panel_2.add(textField, BorderLayout.CENTER);
+            panel2.add(textField, BorderLayout.CENTER);
             textField.addKeyListener(keyEnterUpdate);
         } else if (filterType == FILTER_TYPE.BETWEEN_ONE_AND_FIVE_FILTER_VALUE) {
             final Double[] values = {1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0};
-            panel_1 = new JPanel();
-            panel_4.add(panel_1);
-            panel_1.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
+            panel1 = new JPanel();
+            panel4.add(panel1);
+            panel1.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
 
             final JPanel panelLeft = new JPanel();
-            panel_1.add(panelLeft);
+            panel1.add(panelLeft);
             panelLeft.setLayout(new BorderLayout(5, 0));
 
-            lblLeft = new JLabel("Label");
-            panelLeft.add(lblLeft, BorderLayout.WEST);
+            labelLeft = new JLabel("Label");
+            panelLeft.add(labelLeft, BorderLayout.WEST);
 
-            leftComboBox = new JComboBox<Double>(values);
-            leftComboBox.setMaximumRowCount(values.length);
-            leftComboBox.addActionListener(
+            comboBoxLeft = new JComboBox<>(values);
+            comboBoxLeft.setMaximumRowCount(values.length);
+            comboBoxLeft.addActionListener(
                     new ActionListener() {
                         @Override
-                        public void actionPerformed(ActionEvent e) {
+                        public void actionPerformed(ActionEvent actionEvent) {
                             runDoModelUpdateNow.run();
-                            for (Runnable action : runOnFilterUpdate) {
+                            for (final Runnable action : runOnFilterUpdate) {
                                 action.run();
                             }
                         }
                     });
-            panelLeft.add(leftComboBox, BorderLayout.EAST);
+            panelLeft.add(comboBoxLeft, BorderLayout.EAST);
 
             final JPanel panelRight = new JPanel();
-            panel_1.add(panelRight);
+            panel1.add(panelRight);
             panelRight.setLayout(new BorderLayout(5, 0));
 
-            lblRight = new JLabel("Label");
-            panelRight.add(lblRight, BorderLayout.WEST);
+            labelRight = new JLabel("Label");
+            panelRight.add(labelRight, BorderLayout.WEST);
 
-            rightComboBox = new JComboBox<Double>(values);
-            rightComboBox.setMaximumRowCount(values.length);
-            rightComboBox.setSelectedIndex(values.length - 1);
-            rightComboBox.addActionListener(
+            comboBoxRight = new JComboBox<>(values);
+            comboBoxRight.setMaximumRowCount(values.length);
+            comboBoxRight.setSelectedIndex(values.length - 1);
+            comboBoxRight.addActionListener(
                     new ActionListener() {
                         @Override
-                        public void actionPerformed(ActionEvent e) {
+                        public void actionPerformed(ActionEvent actionEvent) {
                             runDoModelUpdateNow.run();
-                            for (Runnable action : runOnFilterUpdate) {
+                            for (final Runnable action : runOnFilterUpdate) {
                                 action.run();
                             }
                         }
                     });
-            panelRight.add(rightComboBox, BorderLayout.EAST);
+            panelRight.add(comboBoxRight, BorderLayout.EAST);
         }
     }
 
@@ -185,27 +185,27 @@ public abstract class CacheListFilterPanel extends JPanel {
         runOnRemove.add(action);
     }
 
-    protected JLabel getLblLeft() {
-        return lblLeft;
+    protected JLabel getLabelLeft() {
+        return labelLeft;
     }
 
-    protected JLabel getLblRight() {
-        return lblRight;
+    protected JLabel getLabelRight() {
+        return labelRight;
     }
 
-    protected JButton getBtnRemove() {
-        return btnRemove;
+    protected JButton getButtonRemove() {
+        return buttonRemove;
     }
 
-    protected JButton getBtnUpdate() {
-        return btnUpdate;
+    protected JButton getButtonUpdate() {
+        return buttonUpdate;
     }
 
     protected Double getValueRight() {
-        return rightComboBox.getItemAt(rightComboBox.getSelectedIndex());
+        return comboBoxRight.getItemAt(comboBoxRight.getSelectedIndex());
     }
 
     protected Double getValueLeft() {
-        return leftComboBox.getItemAt(leftComboBox.getSelectedIndex());
+        return comboBoxLeft.getItemAt(comboBoxLeft.getSelectedIndex());
     }
 }

@@ -1,10 +1,13 @@
 package cmanager.okapi.responses;
 
+import com.google.gson.annotations.SerializedName;
+
 public class FoundStatusDocument {
 
-    private boolean is_found;
+    @SerializedName("is_found")
+    private boolean found;
 
-    public boolean isIs_found() {
-        return is_found;
+    public boolean isFound() {
+        return found;
     }
 }

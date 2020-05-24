@@ -35,15 +35,14 @@ public class GeocacheContainerType implements Serializable {
         this.container = CONTAINER.getLowercase(container);
     }
 
-    public String asGC() {
+    public String asGc() {
         if (container == null) {
             return null;
         }
-        final String s = CONTAINER.get(container, 0);
-        return s;
+        return CONTAINER.get(container, 0);
     }
 
     public boolean equals(GeocacheContainerType other) {
-        return container == other.container;
+        return container.equals(other.container);
     }
 }

@@ -21,8 +21,6 @@ public class AboutDialog extends JDialog {
 
     private static final long serialVersionUID = 1L;
 
-    private final JLayeredPane contentPanel = new JLayeredPane();
-
     private final AboutDialog THIS = this;
 
     /** Create the dialog. */
@@ -31,33 +29,35 @@ public class AboutDialog extends JDialog {
 
         setBounds(100, 100, 450, 300);
         getContentPane().setLayout(new BorderLayout());
+        JLayeredPane contentPanel = new JLayeredPane();
         contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
         getContentPane().add(contentPanel, BorderLayout.CENTER);
-        final GridBagLayout gbl_contentPanel = new GridBagLayout();
-        gbl_contentPanel.columnWidths = new int[] {0, 0};
-        gbl_contentPanel.rowHeights = new int[] {0, 0, 0, 0, 0, 0, 0};
-        gbl_contentPanel.columnWeights = new double[] {1.0, Double.MIN_VALUE};
-        gbl_contentPanel.rowWeights = new double[] {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
-        contentPanel.setLayout(gbl_contentPanel);
 
-        final JLabel lblAppname = new JLabel(Constants.APP_NAME);
-        lblAppname.setFont(new Font("Dialog", Font.BOLD, 15));
-        final GridBagConstraints gbc_lblAppname = new GridBagConstraints();
-        gbc_lblAppname.insets = new Insets(0, 0, 5, 0);
-        gbc_lblAppname.anchor = GridBagConstraints.NORTH;
-        gbc_lblAppname.gridx = 0;
-        gbc_lblAppname.gridy = 0;
-        contentPanel.add(lblAppname, gbc_lblAppname);
+        final GridBagLayout gbcContentPanel = new GridBagLayout();
+        gbcContentPanel.columnWidths = new int[] {0, 0};
+        gbcContentPanel.rowHeights = new int[] {0, 0, 0, 0, 0, 0, 0};
+        gbcContentPanel.columnWeights = new double[] {1.0, Double.MIN_VALUE};
+        gbcContentPanel.rowWeights = new double[] {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
+        contentPanel.setLayout(gbcContentPanel);
 
-        final JLabel lblVersion = new JLabel(Version.VERSION);
-        lblVersion.setFont(new Font("Dialog", Font.PLAIN, 12));
-        final GridBagConstraints gbc_lblVersion = new GridBagConstraints();
-        gbc_lblVersion.insets = new Insets(0, 0, 5, 0);
-        gbc_lblVersion.gridx = 0;
-        gbc_lblVersion.gridy = 1;
-        contentPanel.add(lblVersion, gbc_lblVersion);
+        final JLabel labelAppName = new JLabel(Constants.APP_NAME);
+        labelAppName.setFont(new Font("Dialog", Font.BOLD, 15));
+        final GridBagConstraints gbcLabelAppName = new GridBagConstraints();
+        gbcLabelAppName.insets = new Insets(0, 0, 5, 0);
+        gbcLabelAppName.anchor = GridBagConstraints.NORTH;
+        gbcLabelAppName.gridx = 0;
+        gbcLabelAppName.gridy = 0;
+        contentPanel.add(labelAppName, gbcLabelAppName);
 
-        final JLabel lblAuthor =
+        final JLabel labelVersion = new JLabel(Version.VERSION);
+        labelVersion.setFont(new Font("Dialog", Font.PLAIN, 12));
+        final GridBagConstraints gbcLabelVersion = new GridBagConstraints();
+        gbcLabelVersion.insets = new Insets(0, 0, 5, 0);
+        gbcLabelVersion.gridx = 0;
+        gbcLabelVersion.gridy = 1;
+        contentPanel.add(labelVersion, gbcLabelVersion);
+
+        final JLabel labelAuthor =
                 new JLabel(
                         "<html>"
                                 + "<b>Original code by</b> "
@@ -66,36 +66,36 @@ public class AboutDialog extends JDialog {
                                 + "<b>Modifications by</b> "
                                 + "FriedrichFr&ouml;bel"
                                 + "</html>");
-        lblAuthor.setFont(new Font("Dialog", Font.PLAIN, 12));
-        final GridBagConstraints gbc_lblAuthor = new GridBagConstraints();
-        gbc_lblAuthor.insets = new Insets(40, 0, 5, 0);
-        gbc_lblAuthor.gridx = 0;
-        gbc_lblAuthor.gridy = 3;
-        contentPanel.add(lblAuthor, gbc_lblAuthor);
+        labelAuthor.setFont(new Font("Dialog", Font.PLAIN, 12));
+        final GridBagConstraints gbcLabelAuthor = new GridBagConstraints();
+        gbcLabelAuthor.insets = new Insets(40, 0, 5, 0);
+        gbcLabelAuthor.gridx = 0;
+        gbcLabelAuthor.gridy = 3;
+        contentPanel.add(labelAuthor, gbcLabelAuthor);
 
-        final JLabel lblThanks =
+        final JLabel labelThanks =
                 new JLabel("Special thanks to the great people at forum.opencaching.de.");
-        lblThanks.setFont(new Font("Dialog", Font.PLAIN, 12));
-        final GridBagConstraints gbc_lblThanks = new GridBagConstraints();
-        gbc_lblThanks.insets = new Insets(80, 0, 5, 0);
-        gbc_lblThanks.gridx = 0;
-        gbc_lblThanks.gridy = 5;
-        contentPanel.add(lblThanks, gbc_lblThanks);
+        labelThanks.setFont(new Font("Dialog", Font.PLAIN, 12));
+        final GridBagConstraints gbcLabelThanks = new GridBagConstraints();
+        gbcLabelThanks.insets = new Insets(80, 0, 5, 0);
+        gbcLabelThanks.gridx = 0;
+        gbcLabelThanks.gridy = 5;
+        contentPanel.add(labelThanks, gbcLabelThanks);
 
         final JPanel buttonPane = new JPanel();
         buttonPane.setLayout(new FlowLayout(FlowLayout.RIGHT));
         getContentPane().add(buttonPane, BorderLayout.SOUTH);
 
-        final JButton btnClose = new JButton("Close");
-        btnClose.addActionListener(
+        final JButton buttonClose = new JButton("Close");
+        buttonClose.addActionListener(
                 new ActionListener() {
-                    public void actionPerformed(ActionEvent arg0) {
+                    public void actionPerformed(ActionEvent actionEvent) {
                         THIS.setVisible(false);
                     }
                 });
-        btnClose.setActionCommand("OK");
-        buttonPane.add(btnClose);
-        getRootPane().setDefaultButton(btnClose);
+        buttonClose.setActionCommand("OK");
+        buttonPane.add(buttonClose);
+        getRootPane().setDefaultButton(buttonClose);
 
         setResizable(false);
         super.pack();

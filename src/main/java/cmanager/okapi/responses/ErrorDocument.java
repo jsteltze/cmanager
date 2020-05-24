@@ -1,27 +1,36 @@
 package cmanager.okapi.responses;
 
+import com.google.gson.annotations.SerializedName;
 import java.util.ArrayList;
 
 public class ErrorDocument {
 
     private static class Error {
 
-        String developer_message;
-        ArrayList<String> reason_stack;
+        @SerializedName("developer_message")
+        String developerMessage;
+
+        @SerializedName("reason_stack")
+        ArrayList<String> reasonStack;
+
         int status;
         String parameter;
-        String whats_wrong_about_it;
-        String more_info;
+
+        @SerializedName("whats_wrong_about_it")
+        String whatsWrongAboutIt;
+
+        @SerializedName("more_info")
+        String moreInfo;
     }
 
     private Error error;
 
-    public String getDeveloper_message() {
-        return error.developer_message;
+    public String getDeveloperMessage() {
+        return error.developerMessage;
     }
 
-    public ArrayList<String> getReason_stack() {
-        return error.reason_stack;
+    public ArrayList<String> getReasonStack() {
+        return error.reasonStack;
     }
 
     public int getStatus() {
@@ -32,11 +41,11 @@ public class ErrorDocument {
         return error.parameter;
     }
 
-    public String getWhats_wrong_about_it() {
-        return error.whats_wrong_about_it;
+    public String getWhatsWrongAboutIt() {
+        return error.whatsWrongAboutIt;
     }
 
-    public String getMore_info() {
-        return error.more_info;
+    public String getMoreInfo() {
+        return error.moreInfo;
     }
 }

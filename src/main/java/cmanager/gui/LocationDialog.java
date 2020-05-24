@@ -5,7 +5,7 @@ import cmanager.geo.Coordinate;
 import cmanager.geo.Geocache;
 import cmanager.geo.Location;
 import cmanager.geo.LocationList;
-import cmanager.okapi.OKAPI;
+import cmanager.okapi.Okapi;
 import cmanager.okapi.User;
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -17,6 +17,7 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import java.util.List;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
@@ -37,11 +38,10 @@ public class LocationDialog extends JDialog {
 
     private static final long serialVersionUID = 1L;
 
-    private final JPanel contentPanel = new JPanel();
     private final JTable table;
-    private final JTextField txtName;
-    private final JTextField txtLat;
-    private final JTextField txtLon;
+    private final JTextField textName;
+    private final JTextField textLatitude;
+    private final JTextField textLongitude;
 
     public boolean modified = false;
 
@@ -54,18 +54,22 @@ public class LocationDialog extends JDialog {
         setTitle("Locations");
         getContentPane().setLayout(new BorderLayout());
 
-        final String columnNames[] = {"Name", "Lat", "Lon"};
-        final String dataValues[][] = {};
-        final DefaultTableModel dtm = new DefaultTableModel(dataValues, columnNames);
+        final String[] columnNames = {"Name", "Lat", "Lon"};
+        final String[][] dataValues = {};
+        final DefaultTableModel tableModel = new DefaultTableModel(dataValues, columnNames);
 
         try {
-            final ArrayList<Location> locations = LocationList.getList().getLocations();
-            for (final Location l : locations) {
-                final String values[] = {l.getName(), l.getLat().toString(), l.getLon().toString()};
-                dtm.addRow(values);
+            final List<Location> locations = LocationList.getList().getLocations();
+            for (final Location location : locations) {
+                final String[] values = {
+                    location.getName(),
+                    location.getLatitude().toString(),
+                    location.getLongitude().toString()
+                };
+                tableModel.addRow(values);
             }
-        } catch (Exception e) {
-            ExceptionPanel.showErrorDialog(this, e);
+        } catch (Exception exception) {
+            ExceptionPanel.showErrorDialog(this, exception);
         }
 
         final JPanel panelMaster = new JPanel();
@@ -73,36 +77,38 @@ public class LocationDialog extends JDialog {
         getContentPane().add(panelMaster, BorderLayout.CENTER);
         panelMaster.setLayout(new BorderLayout(0, 0));
 
-        final JPanel buttonPaneOutter = new JPanel();
-        panelMaster.add(buttonPaneOutter, BorderLayout.SOUTH);
-        buttonPaneOutter.setBorder(null);
-        buttonPaneOutter.setLayout(new BorderLayout(0, 0));
+        final JPanel buttonPaneOuter = new JPanel();
+        panelMaster.add(buttonPaneOuter, BorderLayout.SOUTH);
+        buttonPaneOuter.setBorder(null);
+        buttonPaneOuter.setLayout(new BorderLayout(0, 0));
 
         final JPanel buttonPaneOkCancel = new JPanel();
         buttonPaneOkCancel.setBorder(null);
-        buttonPaneOutter.add(buttonPaneOkCancel, BorderLayout.SOUTH);
+        buttonPaneOuter.add(buttonPaneOkCancel, BorderLayout.SOUTH);
         buttonPaneOkCancel.setLayout(new FlowLayout(FlowLayout.RIGHT));
 
-        final JButton btnOK = new JButton("OK");
-        btnOK.addActionListener(
+        final JButton buttonOk = new JButton("OK");
+        buttonOk.addActionListener(
                 new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
+                    public void actionPerformed(ActionEvent actionEvent) {
                         try {
                             final ArrayList<Location> locations = new ArrayList<>();
 
-                            final DefaultTableModel dtm = ((DefaultTableModel) table.getModel());
-                            for (int i = 0; i < dtm.getRowCount(); i++) {
+                            final DefaultTableModel defaultTableModel =
+                                    ((DefaultTableModel) table.getModel());
+                            for (int i = 0; i < defaultTableModel.getRowCount(); i++) {
                                 final Location l =
                                         new Location(
                                                 (String) table.getValueAt(i, 0),
-                                                Double.valueOf((String) table.getValueAt(i, 1)),
-                                                Double.valueOf((String) table.getValueAt(i, 2)));
+                                                Double.parseDouble((String) table.getValueAt(i, 1)),
+                                                Double.parseDouble(
+                                                        (String) table.getValueAt(i, 2)));
                                 locations.add(l);
                             }
 
                             LocationList.getList().setLocations(locations);
-                        } catch (Throwable t) {
-                            ExceptionPanel.showErrorDialog(THIS, t);
+                        } catch (Throwable throwable) {
+                            ExceptionPanel.showErrorDialog(THIS, throwable);
                             return;
                         }
 
@@ -110,88 +116,88 @@ public class LocationDialog extends JDialog {
                         dispose();
                     }
                 });
-        buttonPaneOkCancel.add(btnOK);
+        buttonPaneOkCancel.add(buttonOk);
 
-        final JButton btnCancel = new JButton("Cancel");
-        btnCancel.addActionListener(
+        final JButton buttonCancel = new JButton("Cancel");
+        buttonCancel.addActionListener(
                 new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
+                    public void actionPerformed(ActionEvent actionEvent) {
                         dispose();
                     }
                 });
-        buttonPaneOkCancel.add(btnCancel);
+        buttonPaneOkCancel.add(buttonCancel);
 
         final JPanel buttonPanelEdit = new JPanel();
         buttonPanelEdit.setBorder(new LineBorder(new Color(0, 0, 0)));
-        buttonPaneOutter.add(buttonPanelEdit, BorderLayout.NORTH);
+        buttonPaneOuter.add(buttonPanelEdit, BorderLayout.NORTH);
         buttonPanelEdit.setLayout(new BorderLayout(0, 0));
 
         final JPanel panelText = new JPanel();
         buttonPanelEdit.add(panelText, BorderLayout.NORTH);
-        final GridBagLayout gbl_panelText = new GridBagLayout();
-        gbl_panelText.columnWidths = new int[] {215, 215, 0};
-        gbl_panelText.rowHeights = new int[] {19, 19, 19, 0};
-        gbl_panelText.columnWeights = new double[] {0.0, 0.0, Double.MIN_VALUE};
-        gbl_panelText.rowWeights = new double[] {0.0, 0.0, 0.0, Double.MIN_VALUE};
-        panelText.setLayout(gbl_panelText);
+        final GridBagLayout gblPanelText = new GridBagLayout();
+        gblPanelText.columnWidths = new int[] {215, 215, 0};
+        gblPanelText.rowHeights = new int[] {19, 19, 19, 0};
+        gblPanelText.columnWeights = new double[] {0.0, 0.0, Double.MIN_VALUE};
+        gblPanelText.rowWeights = new double[] {0.0, 0.0, 0.0, Double.MIN_VALUE};
+        panelText.setLayout(gblPanelText);
 
-        final JLabel lblNewLabel = new JLabel("Name:");
-        final GridBagConstraints gbc_lblNewLabel = new GridBagConstraints();
-        gbc_lblNewLabel.fill = GridBagConstraints.BOTH;
-        gbc_lblNewLabel.insets = new Insets(0, 0, 5, 5);
-        gbc_lblNewLabel.gridx = 0;
-        gbc_lblNewLabel.gridy = 0;
-        panelText.add(lblNewLabel, gbc_lblNewLabel);
+        final JLabel labelName = new JLabel("Name:");
+        final GridBagConstraints gbcLabelName = new GridBagConstraints();
+        gbcLabelName.fill = GridBagConstraints.BOTH;
+        gbcLabelName.insets = new Insets(0, 0, 5, 5);
+        gbcLabelName.gridx = 0;
+        gbcLabelName.gridy = 0;
+        panelText.add(labelName, gbcLabelName);
 
-        txtName = new JTextField();
-        final GridBagConstraints gbc_txtName = new GridBagConstraints();
-        gbc_txtName.fill = GridBagConstraints.BOTH;
-        gbc_txtName.insets = new Insets(0, 0, 5, 0);
-        gbc_txtName.gridx = 1;
-        gbc_txtName.gridy = 0;
-        panelText.add(txtName, gbc_txtName);
-        txtName.setColumns(10);
+        textName = new JTextField();
+        final GridBagConstraints gbcTextName = new GridBagConstraints();
+        gbcTextName.fill = GridBagConstraints.BOTH;
+        gbcTextName.insets = new Insets(0, 0, 5, 0);
+        gbcTextName.gridx = 1;
+        gbcTextName.gridy = 0;
+        panelText.add(textName, gbcTextName);
+        textName.setColumns(10);
 
-        final JLabel lblNewLabel_1 = new JLabel("Lat:");
-        final GridBagConstraints gbc_lblNewLabel_1 = new GridBagConstraints();
-        gbc_lblNewLabel_1.fill = GridBagConstraints.BOTH;
-        gbc_lblNewLabel_1.insets = new Insets(0, 0, 5, 5);
-        gbc_lblNewLabel_1.gridx = 0;
-        gbc_lblNewLabel_1.gridy = 1;
-        panelText.add(lblNewLabel_1, gbc_lblNewLabel_1);
+        final JLabel labelLatitude = new JLabel("Lat:");
+        final GridBagConstraints gbcLabelLatitude = new GridBagConstraints();
+        gbcLabelLatitude.fill = GridBagConstraints.BOTH;
+        gbcLabelLatitude.insets = new Insets(0, 0, 5, 5);
+        gbcLabelLatitude.gridx = 0;
+        gbcLabelLatitude.gridy = 1;
+        panelText.add(labelLatitude, gbcLabelLatitude);
 
-        txtLat = new JTextField();
-        final GridBagConstraints gbc_txtLat = new GridBagConstraints();
-        gbc_txtLat.fill = GridBagConstraints.BOTH;
-        gbc_txtLat.insets = new Insets(0, 0, 5, 0);
-        gbc_txtLat.gridx = 1;
-        gbc_txtLat.gridy = 1;
-        panelText.add(txtLat, gbc_txtLat);
-        txtLat.setColumns(10);
+        textLatitude = new JTextField();
+        final GridBagConstraints gbcTextLatitude = new GridBagConstraints();
+        gbcTextLatitude.fill = GridBagConstraints.BOTH;
+        gbcTextLatitude.insets = new Insets(0, 0, 5, 0);
+        gbcTextLatitude.gridx = 1;
+        gbcTextLatitude.gridy = 1;
+        panelText.add(textLatitude, gbcTextLatitude);
+        textLatitude.setColumns(10);
 
-        final JLabel lblNewLabel_2 = new JLabel("Lon:");
-        final GridBagConstraints gbc_lblNewLabel_2 = new GridBagConstraints();
-        gbc_lblNewLabel_2.fill = GridBagConstraints.BOTH;
-        gbc_lblNewLabel_2.insets = new Insets(0, 0, 0, 5);
-        gbc_lblNewLabel_2.gridx = 0;
-        gbc_lblNewLabel_2.gridy = 2;
-        panelText.add(lblNewLabel_2, gbc_lblNewLabel_2);
+        final JLabel labelLongitude = new JLabel("Lon:");
+        final GridBagConstraints gbcLabelLongitude = new GridBagConstraints();
+        gbcLabelLongitude.fill = GridBagConstraints.BOTH;
+        gbcLabelLongitude.insets = new Insets(0, 0, 0, 5);
+        gbcLabelLongitude.gridx = 0;
+        gbcLabelLongitude.gridy = 2;
+        panelText.add(labelLongitude, gbcLabelLongitude);
 
-        txtLon = new JTextField();
-        final GridBagConstraints gbc_txtLon = new GridBagConstraints();
-        gbc_txtLon.fill = GridBagConstraints.BOTH;
-        gbc_txtLon.gridx = 1;
-        gbc_txtLon.gridy = 2;
-        panelText.add(txtLon, gbc_txtLon);
-        txtLon.setColumns(10);
+        textLongitude = new JTextField();
+        final GridBagConstraints gbcTextLongitude = new GridBagConstraints();
+        gbcTextLongitude.fill = GridBagConstraints.BOTH;
+        gbcTextLongitude.gridx = 1;
+        gbcTextLongitude.gridy = 2;
+        panelText.add(textLongitude, gbcTextLongitude);
+        textLongitude.setColumns(10);
 
         final JPanel panelButton = new JPanel();
         buttonPanelEdit.add(panelButton, BorderLayout.SOUTH);
 
-        final JButton btnRemove = new JButton("Remove");
-        btnRemove.addActionListener(
+        final JButton buttonRemove = new JButton("Remove");
+        buttonRemove.addActionListener(
                 new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
+                    public void actionPerformed(ActionEvent actionEvent) {
                         final int row = table.getSelectedRow();
                         if (row == -1) {
                             return;
@@ -199,12 +205,12 @@ public class LocationDialog extends JDialog {
                         ((DefaultTableModel) table.getModel()).removeRow(row);
                     }
                 });
-        panelButton.add(btnRemove);
+        panelButton.add(buttonRemove);
 
-        final JButton btnUpdate = new JButton("Update");
-        btnUpdate.addActionListener(
+        final JButton buttonUpdate = new JButton("Update");
+        buttonUpdate.addActionListener(
                 new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
+                    public void actionPerformed(ActionEvent actionEvent) {
                         final int row = table.getSelectedRow();
                         if (row == -1) {
                             return;
@@ -212,83 +218,86 @@ public class LocationDialog extends JDialog {
 
                         try {
                             new Location(
-                                    txtName.getText(),
-                                    Double.valueOf(txtLat.getText()),
-                                    Double.valueOf(txtLon.getText()));
-                        } catch (Throwable t) {
-                            ExceptionPanel.showErrorDialog(THIS, t);
+                                    textName.getText(),
+                                    Double.parseDouble(textLatitude.getText()),
+                                    Double.parseDouble(textLongitude.getText()));
+                        } catch (Throwable throwable) {
+                            ExceptionPanel.showErrorDialog(THIS, throwable);
                             return;
                         }
 
-                        final DefaultTableModel dtm = ((DefaultTableModel) table.getModel());
-                        dtm.setValueAt(txtName.getText(), row, 0);
-                        dtm.setValueAt(txtLat.getText(), row, 1);
-                        dtm.setValueAt(txtLon.getText(), row, 2);
+                        final DefaultTableModel defaultTableModel =
+                                ((DefaultTableModel) table.getModel());
+                        defaultTableModel.setValueAt(textName.getText(), row, 0);
+                        defaultTableModel.setValueAt(textLatitude.getText(), row, 1);
+                        defaultTableModel.setValueAt(textLongitude.getText(), row, 2);
                     }
                 });
-        panelButton.add(btnUpdate);
+        panelButton.add(buttonUpdate);
 
-        final JButton btnAdd = new JButton("Add");
-        btnAdd.addActionListener(
+        final JButton buttonAdd = new JButton("Add");
+        buttonAdd.addActionListener(
                 new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
+                    public void actionPerformed(ActionEvent actionEvent) {
                         try {
                             new Location(
-                                    txtName.getText(),
-                                    Double.valueOf(txtLat.getText()),
-                                    Double.valueOf(txtLon.getText()));
-                        } catch (Throwable t) {
-                            ExceptionPanel.showErrorDialog(THIS, t);
+                                    textName.getText(),
+                                    Double.parseDouble(textLatitude.getText()),
+                                    Double.parseDouble(textLongitude.getText()));
+                        } catch (Throwable throwable) {
+                            ExceptionPanel.showErrorDialog(THIS, throwable);
                             return;
                         }
 
-                        final DefaultTableModel dtm = ((DefaultTableModel) table.getModel());
-                        final String values[] = {
-                            txtName.getText(), txtLat.getText(), txtLon.getText()
+                        final DefaultTableModel defaultTableModel =
+                                ((DefaultTableModel) table.getModel());
+                        final String[] values = {
+                            textName.getText(), textLatitude.getText(), textLongitude.getText()
                         };
-                        dtm.addRow(values);
+                        defaultTableModel.addRow(values);
                     }
                 });
-        panelButton.add(btnAdd);
+        panelButton.add(buttonAdd);
 
         final JSeparator separator = new JSeparator();
         panelButton.add(separator);
 
-        final JButton btnRetrieve = new JButton("OKAPI Coordinates");
-        btnRetrieve.setEnabled(false);
-        btnRetrieve.setFont(new Font("Dialog", Font.BOLD, 9));
-        btnRetrieve.addActionListener(
+        final JButton buttonRetrieve = new JButton("OKAPI Coordinates");
+        buttonRetrieve.setEnabled(false);
+        buttonRetrieve.setFont(new Font("Dialog", Font.BOLD, 9));
+        buttonRetrieve.addActionListener(
                 new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
+                    public void actionPerformed(ActionEvent actionEvent) {
                         final User user = User.getOKAPIUser();
                         try {
-                            final Coordinate c = OKAPI.getHomeCoordinates(user);
-                            txtName.setText("OKAPI Home Coordinate");
-                            txtLat.setText(c.getLat().toString());
-                            txtLon.setText(c.getLon().toString());
-                        } catch (Exception ex) {
-                            ExceptionPanel.showErrorDialog(THIS, ex);
+                            final Coordinate coordinate = Okapi.getHomeCoordinates(user);
+                            textName.setText("OKAPI Home Coordinate");
+                            textLatitude.setText(coordinate.getLatitude().toString());
+                            textLongitude.setText(coordinate.getLongitude().toString());
+                        } catch (Exception exception) {
+                            ExceptionPanel.showErrorDialog(THIS, exception);
                         }
                     }
                 });
-        panelButton.add(btnRetrieve);
+        panelButton.add(buttonRetrieve);
 
+        final JPanel contentPanel = new JPanel();
         panelMaster.add(contentPanel);
         contentPanel.setLayout(new FlowLayout());
         contentPanel.setBorder(null);
-        table = new JTable(dtm);
+        table = new JTable(tableModel);
         table.getSelectionModel()
                 .addListSelectionListener(
                         new ListSelectionListener() {
-                            public void valueChanged(ListSelectionEvent arg0) {
+                            public void valueChanged(ListSelectionEvent listSelectionEvent) {
                                 final int row = table.getSelectedRow();
                                 if (row == -1) {
                                     return;
                                 }
 
-                                txtName.setText((String) table.getValueAt(row, 0));
-                                txtLat.setText((String) table.getValueAt(row, 1));
-                                txtLon.setText((String) table.getValueAt(row, 2));
+                                textName.setText((String) table.getValueAt(row, 0));
+                                textLatitude.setText((String) table.getValueAt(row, 1));
+                                textLongitude.setText((String) table.getValueAt(row, 2));
                             }
                         });
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -303,26 +312,26 @@ public class LocationDialog extends JDialog {
 
         pack();
 
-        ThreadStore ts = new ThreadStore();
-        ts.addAndRun(
+        final ThreadStore threadStore = new ThreadStore();
+        threadStore.addAndRun(
                 new Thread(
                         new Runnable() {
                             public void run() {
                                 final User user = User.getOKAPIUser();
                                 try {
                                     if (user.getOkapiToken() != null
-                                            && OKAPI.getUUID(user) != null) {
-                                        btnRetrieve.setEnabled(true);
+                                            && Okapi.getUuid(user) != null) {
+                                        buttonRetrieve.setEnabled(true);
                                     }
-                                } catch (Exception e) {
+                                } catch (Exception ignored) {
                                 }
                             }
                         }));
     }
 
-    public void setGeocache(Geocache g) {
-        txtName.setText(g.getName());
-        txtLat.setText(g.getCoordinate().getLat().toString());
-        txtLon.setText(g.getCoordinate().getLon().toString());
+    public void setGeocache(Geocache geocache) {
+        textName.setText(geocache.getName());
+        textLatitude.setText(geocache.getCoordinate().getLatitude().toString());
+        textLongitude.setText(geocache.getCoordinate().getLongitude().toString());
     }
 }

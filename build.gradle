@@ -44,7 +44,8 @@ dependencies {
     implementation group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.5.12'
     
     // Use JUnit test framework.
-    testImplementation 'junit:junit:4.13'
+    testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.6.2'
+    testRuntimeOnly group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: '5.6.2'
 }
 
 // Define the main class for the application.
@@ -58,6 +59,11 @@ version = '0.4.0'
 
 wrapper {
     gradleVersion = '6.4.1'
+}
+
+// Use JUnit 5 for testing.
+test {
+    useJUnitPlatform()
 }
 
 // Allow retrieving the configuration values from environment variables as well.

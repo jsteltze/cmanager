@@ -1,11 +1,12 @@
 package cmanager.gui;
 
 import java.util.ArrayList;
+import java.util.List;
 import javax.swing.JFrame;
 
 public class FrameHelper {
 
-    private static final ArrayList<JFrame> reactivationQueue = new ArrayList<>();
+    private static final List<JFrame> reactivationQueue = new ArrayList<>();
 
     private static synchronized void addToQueue(JFrame frame) {
         reactivationQueue.add(frame);
@@ -28,14 +29,14 @@ public class FrameHelper {
         newFrame.setVisible(true);
         newFrame.toFront();
 
-        Thread t =
+        Thread thread =
                 new Thread(
                         new Runnable() {
                             public void run() {
                                 while (newFrame.isVisible() || !isFirstInQueue(owner)) {
                                     try {
                                         Thread.sleep(200);
-                                    } catch (InterruptedException e) {
+                                    } catch (InterruptedException ignored) {
                                     }
                                 }
 
@@ -45,6 +46,6 @@ public class FrameHelper {
                                 removeFromQueue(owner);
                             }
                         });
-        t.start();
+        thread.start();
     }
 }

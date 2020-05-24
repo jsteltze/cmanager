@@ -21,10 +21,10 @@ public class ExceptionPanel extends JPanel {
 
     private static ExceptionPanel THIS = null;
 
-    private JPanel panelDetails;
-    private JPanel panelMessage;
-    private JTextPane textDetails;
-    private JScrollPane scrollPane;
+    private final JPanel panelDetails;
+    private final JPanel panelMessage;
+    private final JTextPane textDetails;
+    private final JScrollPane scrollPane;
 
     public static ExceptionPanel getPanel() {
         if (THIS == null) {
@@ -33,36 +33,32 @@ public class ExceptionPanel extends JPanel {
         return THIS;
     }
 
-    /**
-     * Create the panel.
-     *
-     * @throws Exception
-     */
+    /** Create the panel. */
     private ExceptionPanel() {
         setLayout(new BorderLayout(0, 0));
 
         panelMessage = new JPanel();
         add(panelMessage, BorderLayout.NORTH);
 
-        final JButton btnEnlarge =
-                new JButton("One or more exceptions occured. Click to show/hide.");
-        btnEnlarge.setForeground(Color.RED);
-        btnEnlarge.setOpaque(false);
-        btnEnlarge.setContentAreaFilled(false);
-        btnEnlarge.addActionListener(
+        final JButton buttonEnlarge =
+                new JButton("One or more exceptions occurred. Click to show/hide.");
+        buttonEnlarge.setForeground(Color.RED);
+        buttonEnlarge.setOpaque(false);
+        buttonEnlarge.setContentAreaFilled(false);
+        buttonEnlarge.addActionListener(
                 new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
+                    public void actionPerformed(ActionEvent actionEvent) {
                         panelDetails.setVisible(!panelDetails.isVisible());
                     }
                 });
         panelMessage.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
-        panelMessage.add(btnEnlarge);
+        panelMessage.add(buttonEnlarge);
 
-        final JButton btnClose = new JButton("x");
-        panelMessage.add(btnClose);
-        btnClose.addActionListener(
+        final JButton buttonClose = new JButton("x");
+        panelMessage.add(buttonClose);
+        buttonClose.addActionListener(
                 new ActionListener() {
-                    public void actionPerformed(ActionEvent arg0) {
+                    public void actionPerformed(ActionEvent actionEvent) {
                         hideUs();
                     }
                 });
@@ -82,9 +78,9 @@ public class ExceptionPanel extends JPanel {
 
         this.addComponentListener(
                 new ComponentAdapter() {
-                    public void componentResized(ComponentEvent e) {
-                        final Dimension d = new Dimension(THIS.getWidth(), 200);
-                        scrollPane.setPreferredSize(d);
+                    public void componentResized(ComponentEvent componentEvent) {
+                        final Dimension dimension = new Dimension(THIS.getWidth(), 200);
+                        scrollPane.setPreferredSize(dimension);
                     }
                 });
 
@@ -97,35 +93,35 @@ public class ExceptionPanel extends JPanel {
         textDetails.setText("");
     }
 
-    private void display_(String s) {
+    private void displayInternal(String string) {
         String text = textDetails.getText();
         if (text.length() > 0) {
             text += "\n";
         }
 
-        text += s;
+        text += string;
         textDetails.setText(text);
         panelMessage.setVisible(true);
     }
 
-    public static void display(Exception e) {
-        e.printStackTrace();
+    public static void display(Exception exception) {
+        exception.printStackTrace();
 
-        String s = e.getClass().getName() + "\n";
-        if (e.getMessage() != null) {
-            s += e.getMessage() + "\n";
+        String string = exception.getClass().getName() + "\n";
+        if (exception.getMessage() != null) {
+            string += exception.getMessage() + "\n";
         }
-        s += toString(e);
-        THIS.display_(s);
+        string += toString(exception);
+        THIS.displayInternal(string);
     }
 
     public static void display(StackTraceElement[] stack) {
-        THIS.display_(toString(stack));
+        THIS.displayInternal(toString(stack));
     }
 
-    public static void display(String s) {
-        System.err.println(s);
-        THIS.display_(s);
+    public static void display(String string) {
+        System.err.println(string);
+        THIS.displayInternal(string);
     }
 
     public static void showErrorDialog(Component parent, String errorMessage, String title) {
@@ -151,29 +147,29 @@ public class ExceptionPanel extends JPanel {
         }
     }
 
-    public static String toShortString(Throwable e) {
-        String res = "";
-        int lineNr = 0;
-        for (final StackTraceElement ste : e.getStackTrace()) {
-            lineNr++;
-            res += ste.toString() + "\n";
-            if (lineNr == 12) {
-                res += "...";
+    public static String toShortString(Throwable throwable) {
+        final StringBuilder res = new StringBuilder();
+        int lineNumber = 0;
+        for (final StackTraceElement stackTraceElement : throwable.getStackTrace()) {
+            lineNumber++;
+            res.append(stackTraceElement.toString()).append("\n");
+            if (lineNumber == 12) {
+                res.append("...");
                 break;
             }
         }
-        return res;
+        return res.toString();
     }
 
-    public static String toString(Throwable e) {
-        return toString(e.getStackTrace());
+    public static String toString(Throwable throwable) {
+        return toString(throwable.getStackTrace());
     }
 
     public static String toString(StackTraceElement[] stack) {
-        String res = "";
-        for (final StackTraceElement ste : stack) {
-            res += ste.toString() + "\n";
+        final StringBuilder res = new StringBuilder();
+        for (final StackTraceElement stackTraceElement : stack) {
+            res.append(stackTraceElement.toString()).append("\n");
         }
-        return res;
+        return res.toString();
     }
 }

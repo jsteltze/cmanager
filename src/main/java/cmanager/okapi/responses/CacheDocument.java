@@ -1,12 +1,17 @@
 package cmanager.okapi.responses;
 
+import com.google.gson.annotations.SerializedName;
+
 public class CacheDocument {
 
     private String code;
     private String name;
     private String location;
     private String type;
-    private String gc_code;
+
+    @SerializedName("gc_code")
+    private String gcCode;
+
     private Double difficulty;
     private Double terrain;
     private String status;
@@ -27,8 +32,8 @@ public class CacheDocument {
         return type;
     }
 
-    public String getGc_code() {
-        return gc_code;
+    public String getGcCode() {
+        return gcCode;
     }
 
     public Double getDifficulty() {

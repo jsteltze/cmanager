@@ -1,6 +1,6 @@
 package cmanager.okapi.responses;
 
-public class UUIDDocument {
+public class UuidDocument {
 
     private String uuid;
 

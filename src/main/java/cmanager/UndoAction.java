@@ -2,16 +2,17 @@ package cmanager;
 
 import cmanager.geo.Geocache;
 import java.util.ArrayList;
+import java.util.List;
 
 public class UndoAction {
 
-    private ArrayList<Geocache> state;
+    private final List<Geocache> state;
 
-    public UndoAction(ArrayList<Geocache> list) {
+    public UndoAction(List<Geocache> list) {
         state = new ArrayList<>(list);
     }
 
-    public ArrayList<Geocache> getState() {
+    public List<Geocache> getState() {
         return state;
     }
 }

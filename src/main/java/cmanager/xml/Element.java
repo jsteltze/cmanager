@@ -1,14 +1,15 @@
 package cmanager.xml;
 
 import java.util.ArrayList;
+import java.util.List;
 import org.apache.commons.text.StringEscapeUtils;
 
 public class Element {
 
     private String elementName = null;
     private String body = null;
-    private final ArrayList<Element> children = new ArrayList<Element>();
-    private final ArrayList<XMLAttribute> attributes = new ArrayList<XMLAttribute>();
+    private final List<Element> children = new ArrayList<>();
+    private final List<XmlAttribute> attributes = new ArrayList<>();
 
     public Element() {}
 
@@ -49,8 +50,8 @@ public class Element {
     }
 
     public boolean attrIs(String attr, String is) {
-        for (final XMLAttribute a : attributes) {
-            if (a.is(attr, is)) {
+        for (final XmlAttribute attribute : attributes) {
+            if (attribute.is(attr, is)) {
                 return true;
             }
         }
@@ -61,14 +62,14 @@ public class Element {
         children.add(child);
     }
 
-    public ArrayList<Element> getChildren() {
+    public List<Element> getChildren() {
         return children;
     }
 
     public Element getChild(String name) {
-        for (final Element e : children) {
-            if (e.is(name)) {
-                return e;
+        for (final Element element : children) {
+            if (element.is(name)) {
+                return element;
             }
         }
         return null;
@@ -80,8 +81,8 @@ public class Element {
      * @param name To tag name to filter for.
      * @return The children matching the given tag name.
      */
-    public ArrayList<Element> getChildren(String name) {
-        final ArrayList<Element> matching = new ArrayList<>();
+    public List<Element> getChildren(String name) {
+        final List<Element> matching = new ArrayList<>();
         for (final Element element : children) {
             if (element.is(name)) {
                 matching.add(element);
@@ -90,11 +91,11 @@ public class Element {
         return matching;
     }
 
-    public void add(XMLAttribute attr) {
-        attributes.add(attr);
+    public void add(XmlAttribute attribute) {
+        attributes.add(attribute);
     }
 
-    public ArrayList<XMLAttribute> getAttributes() {
+    public List<XmlAttribute> getAttributes() {
         return attributes;
     }
 
@@ -106,42 +107,43 @@ public class Element {
         return body == null ? null : StringEscapeUtils.unescapeXml(body);
     }
 
-    public Double getBodyD() {
+    public Double getBodyDouble() {
         return Double.valueOf(body);
     }
 
-    public Integer getBodyI() {
+    public Integer getBodyInteger() {
         return Integer.valueOf(body);
     }
 
-    public Boolean getBodyB() {
+    public Boolean getBodyBoolean() {
         return Boolean.valueOf(body);
     }
 
-    public static class XMLAttribute {
+    public static class XmlAttribute {
+
         private String name;
         private String value = null;
 
-        public XMLAttribute(String name) {
+        public XmlAttribute(String name) {
             this.name = name;
         }
 
-        public XMLAttribute(String name, String value) {
+        public XmlAttribute(String name, String value) {
             this.name = name;
             this.value = value;
         }
 
-        public XMLAttribute(String name, Double value) {
+        public XmlAttribute(String name, Double value) {
             this.name = name;
             this.value = value != null ? value.toString() : null;
         }
 
-        public XMLAttribute(String name, Boolean value) {
+        public XmlAttribute(String name, Boolean value) {
             this.name = name;
-            this.value = value == null ? null : value == true ? "True" : "False";
+            this.value = value == null ? null : value ? "True" : "False";
         }
 
-        public XMLAttribute(String name, Integer value) {
+        public XmlAttribute(String name, Integer value) {
             this.name = name;
             this.value = value != null ? value.toString() : null;
         }
@@ -166,11 +168,11 @@ public class Element {
             return value;
         }
 
-        public Double getValueD() {
+        public Double getValueDouble() {
             return Double.valueOf(value);
         }
 
-        public Integer getValueI() {
+        public Integer getValueInteger() {
             return Integer.valueOf(value);
         }
     }

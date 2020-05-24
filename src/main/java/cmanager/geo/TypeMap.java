@@ -2,25 +2,25 @@ package cmanager.geo;
 
 import cmanager.gui.ExceptionPanel;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class TypeMap {
 
-    private ArrayList<ArrayList<String>> map = new ArrayList<>();
+    private final List<List<String>> map = new ArrayList<>();
 
     public void add(String... key) {
-        final ArrayList<String> list = new ArrayList<>(key.length);
-        for (final String k : key) {
-            list.add(k);
-        }
+        final List<String> list = new ArrayList<>(key.length);
+        Collections.addAll(list, key);
         map.add(list);
     }
 
     public Integer getLowercase(String key) {
         key = key.toLowerCase();
 
-        for (final ArrayList<String> list : map) {
-            for (final String s : list) {
-                if (s != null && s.toLowerCase().equals(key)) {
+        for (final List<String> list : map) {
+            for (final String string : list) {
+                if (string != null && string.toLowerCase().equals(key)) {
                     return map.indexOf(list);
                 }
             }
@@ -31,9 +31,9 @@ public class TypeMap {
     }
 
     public Integer get(String key) {
-        for (final ArrayList<String> list : map) {
-            for (final String s : list) {
-                if (s != null && s.equals(key)) {
+        for (final List<String> list : map) {
+            for (final String string : list) {
+                if (string != null && string.equals(key)) {
                     return map.indexOf(list);
                 }
             }
@@ -44,7 +44,7 @@ public class TypeMap {
     }
 
     public String get(int i, int j) {
-        final ArrayList<String> list = map.get(i);
+        final List<String> list = map.get(i);
         return list.get(j);
     }
 }

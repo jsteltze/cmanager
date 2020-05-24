@@ -1,10 +1,10 @@
 package cmanager.okapi.helper;
 
-import cmanager.network.ApacheHTTP;
+import cmanager.network.ApacheHttp;
 import cmanager.network.UnexpectedStatusCode;
-import cmanager.okapi.OKAPI;
-import cmanager.okapi.OKAPI.RequestAuthorizationCallbackI;
-import cmanager.okapi.OKAPI.TokenProviderI;
+import cmanager.okapi.Okapi;
+import cmanager.okapi.Okapi.RequestAuthorizationCallbackI;
+import cmanager.okapi.Okapi.TokenProviderI;
 import com.github.scribejava.core.model.OAuth1AccessToken;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -15,13 +15,26 @@ import java.util.regex.Pattern;
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 
+/** Client implementation for the OAuth-based tests. */
 public class TestClient implements TokenProviderI {
 
-    private final ApacheHTTP http = new ApacheHTTP();
+    /** The networking instance to use for our requests. */
+    private final ApacheHttp http = new ApacheHttp();
+
+    /** The OAuth token to use. */
     private OAuth1AccessToken token = null;
 
+    /**
+     * Login into the Opencaching.de site.
+     *
+     * @return Whether the login worked or not.
+     * @throws UnexpectedStatusCode The status code of the response is not 200, so there seems to be
+     *     a problem.
+     * @throws IOException Something I/O-related failed - maybe the internet connection is not
+     *     working.
+     */
     public boolean login() throws UnexpectedStatusCode, IOException {
-        final List<NameValuePair> nvps = new ArrayList<NameValuePair>();
+        final List<NameValuePair> nvps = new ArrayList<>();
         nvps.add(new BasicNameValuePair("email", TestClientCredentials.USERNAME));
         nvps.add(new BasicNameValuePair("password", TestClientCredentials.PASSWORD));
         nvps.add(new BasicNameValuePair("action", "login"));
@@ -31,6 +44,13 @@ public class TestClient implements TokenProviderI {
         return response.contains(TestClientCredentials.USERNAME);
     }
 
+    /**
+     * Extract the requested parameter from the given URL.
+     *
+     * @param url The URL to extract the parameter from.
+     * @param parameter The name of the parameter to extract.
+     * @return The extracted parameter or an empty string if the parameter has not been found.
+     */
     private String extractParameter(final String url, final String parameter) {
         final String parameters = url.split("\\?")[1];
         final String[] pairs = parameters.split("&");
@@ -43,25 +63,38 @@ public class TestClient implements TokenProviderI {
         return "";
     }
 
+    /**
+     * Request the OAuth access token from the Opencaching.de site. This is an automated way of
+     * getting the required PIN without the user having to manually do anything (at least if
+     * everything works fine).
+     *
+     * @return The access token to use.
+     * @throws IOException Something I/O-related failed - maybe the internet connection is not
+     *     working.
+     * @throws InterruptedException The request has been interrupted.
+     * @throws ExecutionException Something went wrong with the execution.
+     */
     public OAuth1AccessToken requestToken()
             throws IOException, InterruptedException, ExecutionException {
         final OAuth1AccessToken token =
-                OKAPI.requestAuthorization(
+                Okapi.requestAuthorization(
                         new RequestAuthorizationCallbackI() {
                             private String pin = null;
 
                             @Override
                             public void redirectUrlToUser(String authUrl) {
+                                // Determine the URL to use for the request.
                                 final String oauth_token = extractParameter(authUrl, "oauth_token");
                                 final String url =
                                         "https://www.opencaching.de/okapi/apps/authorize?interactivity=minimal&oauth_token="
                                                 + oauth_token;
 
                                 // Open the authorization page.
-                                String response = null;
+                                String response;
                                 try {
                                     response = http.get(url).getBody();
                                 } catch (IOException e) {
+                                    return;
                                 }
 
                                 // If this application has not been authorized before, we will get a
@@ -74,24 +107,28 @@ public class TestClient implements TokenProviderI {
                                 if (response.contains(
                                         "<form id='authform' method='POST' class='form'>")) {
                                     final List<NameValuePair> parameters = new ArrayList<>(3);
-                                    parameters.add(
+                                    /*parameters.add(
                                             new BasicNameValuePair("interactivity", "minimal"));
                                     parameters.add(
-                                            new BasicNameValuePair("oauth_token", oauth_token));
+                                            new BasicNameValuePair("oauth_token", oauth_token));*/
                                     parameters.add(
                                             new BasicNameValuePair(
                                                     "authorization_result", "granted"));
                                     try {
                                         response = http.post(url, parameters).getBody();
-                                    } catch (IOException | UnexpectedStatusCode e) {
+                                    } catch (IOException exception) {
+                                        return;
                                     }
                                 }
 
-                                // Retrieve the PIN value from the webpage.
+                                // Retrieve the PIN value from the web page.
                                 final Matcher matcher =
-                                        Pattern.compile("<div class=\\'pin\\'>(\\d*)<\\/div>")
+                                        Pattern.compile("<div class='pin'>(\\d*)</div>")
                                                 .matcher(response);
-                                matcher.find();
+                                final boolean success = matcher.find();
+                                if (!success) {
+                                    return;
+                                }
                                 pin = matcher.group(1);
                             }
 
@@ -105,6 +142,11 @@ public class TestClient implements TokenProviderI {
         return token;
     }
 
+    /**
+     * Get the token.
+     *
+     * @return The token.
+     */
     @Override
     public OAuth1AccessToken getOkapiToken() {
         return token;

@@ -18,7 +18,7 @@ public class PersistentTileCache implements TileCache {
 
     String path;
 
-    final MemoryTileCache mtc = new MemoryTileCache();
+    final MemoryTileCache memoryTileCache = new MemoryTileCache();
     final ExecutorService service = Executors.newFixedThreadPool(10);
 
     private boolean online = false;
@@ -30,29 +30,29 @@ public class PersistentTileCache implements TileCache {
 
     @Override
     public void addTile(final Tile tile) {
-        // a tile has been downloaded thus we are online
+        // A tile has been downloaded thus we are online.
         if (!online) {
             online = true;
-            mtc.clear();
+            memoryTileCache.clear();
         }
 
         service.submit(
                 new Runnable() {
                     public void run() {
-                        // wait for tile to load
+                        // Wait for tile to load.
                         while (!tile.isLoaded() && !tile.hasError()) {
                             try {
                                 Thread.sleep(500);
-                            } catch (InterruptedException e) {
+                            } catch (InterruptedException ignored) {
                             }
                         }
 
-                        // skip tile on error
+                        // Skip tile on error.
                         if (tile.hasError()) {
                             return;
                         }
 
-                        // store tile to disk
+                        // Store tile to disk.
                         final String fileName = getFileName(tile);
                         final File outputfile = new File(fileName);
                         try {
@@ -64,31 +64,31 @@ public class PersistentTileCache implements TileCache {
                     }
                 });
 
-        mtc.addTile(tile);
+        memoryTileCache.addTile(tile);
     }
 
     @Override
     public void clear() {
-        mtc.clear();
+        memoryTileCache.clear();
     }
 
     @Override
     public int getCacheSize() {
-        return mtc.getCacheSize();
+        return memoryTileCache.getCacheSize();
     }
 
     @Override
     public Tile getTile(TileSource source, int x, int y, int z) {
-        // Deny serving very first tile in order to trigger download for this
-        // tile and thus to check whether we are online. This tile is unimportant
-        // since the display of JMapViewer is relocated after adding caches.
+        // Deny serving very first tile in order to trigger download for this tile and thus to
+        // check whether we are online. This tile is unimportant since the display of JMapViewer is
+        // relocated after adding caches.
         if (!firstTileServed) {
             firstTileServed = true;
             return null;
         }
 
         // Tile in memory cache?
-        Tile tile = mtc.getTile(source, x, y, z);
+        Tile tile = memoryTileCache.getTile(source, x, y, z);
         if (tile != null) {
             return tile;
         }
@@ -97,7 +97,7 @@ public class PersistentTileCache implements TileCache {
         final String fileName = getFileName(source, x, y, z);
         final File file = new File(fileName);
         if (file.exists()) {
-            // reload if is older than 3 month
+            // Reload if is older than 3 month.
             DateTime fileTime = new DateTime(file.lastModified());
             final DateTime now = new DateTime();
             fileTime = fileTime.plusMonths(3);
@@ -121,20 +121,26 @@ public class PersistentTileCache implements TileCache {
 
     @Override
     public int getTileCount() {
-        return mtc.getTileCount();
+        return memoryTileCache.getTileCount();
     }
 
     private String getFileName(TileSource source, int x, int y, int z) {
-        final ICoordinate coord = source.tileXYToLatLon(x, y, z);
-        return getFileName(coord.getLat(), coord.getLon(), z);
+        final ICoordinate coordinate = source.tileXYToLatLon(x, y, z);
+        return getFileName(coordinate.getLat(), coordinate.getLon(), z);
     }
 
     private String getFileName(Tile tile) {
-        final ICoordinate coord = tile.getSource().tileXYToLatLon(tile);
-        return getFileName(coord.getLat(), coord.getLon(), tile.getZoom());
+        final ICoordinate coordinate = tile.getSource().tileXYToLatLon(tile);
+        return getFileName(coordinate.getLat(), coordinate.getLon(), tile.getZoom());
     }
 
-    private String getFileName(Double lat, Double lon, Integer zoom) {
-        return path + lat.toString() + "-" + lon.toString() + "-" + zoom.toString() + ".png";
+    private String getFileName(Double latitude, Double longitude, Integer zoom) {
+        return path
+                + latitude.toString()
+                + "-"
+                + longitude.toString()
+                + "-"
+                + zoom.toString()
+                + ".png";
     }
 }

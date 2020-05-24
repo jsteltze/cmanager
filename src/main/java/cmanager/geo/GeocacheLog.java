@@ -148,13 +148,9 @@ public class GeocacheLog implements Serializable {
 
     public boolean isFoundLog() {
         final String typeStr = getTypeStr();
-        if (typeStr.equals("Found it")
+        return typeStr.equals("Found it")
                 || typeStr.equals("Attended")
-                || typeStr.equals("Webcam Photo Taken")) {
-            return true;
-        }
-
-        return false;
+                || typeStr.equals("Webcam Photo Taken");
     }
 
     public String getText() {
@@ -170,18 +166,18 @@ public class GeocacheLog implements Serializable {
         return fmt.print(date);
     }
 
-    public String getDateStrISO8601() {
+    public String getDateStrIso8601() {
         final DateTimeFormatter fmt = ISODateTimeFormat.dateTime();
         return fmt.print(date);
     }
 
-    public static String getDateStrISO8601NoTime(DateTime date) {
+    public static String getDateStrIso8601NoTime(DateTime date) {
         final DateTimeFormatter fmt = ISODateTimeFormat.date();
         return fmt.print(date);
     }
 
-    public String getDateStrISO8601NoTime() {
-        return getDateStrISO8601NoTime(date);
+    public String getDateStrIso8601NoTime() {
+        return getDateStrIso8601NoTime(date);
     }
 
     public String getPassword() {
@@ -194,7 +190,7 @@ public class GeocacheLog implements Serializable {
      * <p>This is required as the OKAPI does not seem to accept "Webcam Photo Taken" logs for webcam
      * caches, but requires a "Found it" log.
      *
-     * @see https://www.opencaching.de/okapi/services/logs/submit.html
+     * @link https://www.opencaching.de/okapi/services/logs/submit.html
      * @param geocache The geocache instance this log belongs to. This may be needed to distinguish
      *     the different cache types in the future, but is not used for now.
      * @return The OKAPI log type.

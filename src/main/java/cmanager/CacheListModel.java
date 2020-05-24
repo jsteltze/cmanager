@@ -10,93 +10,89 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import javax.swing.table.AbstractTableModel;
 import org.joda.time.DateTime;
 
 public class CacheListModel {
 
-    private ArrayList<Geocache> list = new ArrayList<Geocache>();
-    private final LinkedList<Waypoint> orphandWaypoints = new LinkedList<>();
+    private List<Geocache> list = new ArrayList<>();
+    private final LinkedList<Waypoint> orphanedWaypoints = new LinkedList<>();
     private final CacheListModel THIS = this;
     private Location relativeLocation;
 
-    private boolean refilteringRequired = true;
-    private final ArrayList<CacheListFilterModel> filters = new ArrayList<>();
-    private ArrayList<Geocache> list_filtered;
+    private boolean reFilteringRequired = true;
+    private final List<CacheListFilterModel> filters = new ArrayList<>();
+    private List<Geocache> listFiltered;
 
     private final int MAX_UNDO_COUNT = 300;
-    private final ArrayList<UndoAction> undoActions = new ArrayList<>();
+    private final List<UndoAction> undoActions = new ArrayList<>();
 
-    private void addCache(Geocache g) {
-        list.add(g);
-        matchOrphands(g);
+    private void addCache(Geocache geocache) {
+        list.add(geocache);
+        matchOrphans(geocache);
 
-        refilteringRequired = true;
+        reFilteringRequired = true;
     }
 
     public void addFilter(CacheListFilterModel filter) {
         filter.addRunOnFilterUpdate(
                 new Runnable() {
                     public void run() {
-                        refilteringRequired = true;
+                        reFilteringRequired = true;
                     }
                 });
         filters.add(filter);
 
-        refilteringRequired = true;
+        reFilteringRequired = true;
     }
 
     public void removeFilter(CacheListFilterModel filter) {
-        Iterator<CacheListFilterModel> i = filters.iterator();
-        while (i.hasNext()) {
-            CacheListFilterModel f = i.next();
-            if (f == filter) {
-                i.remove();
+        Iterator<CacheListFilterModel> iterator = filters.iterator();
+        while (iterator.hasNext()) {
+            final CacheListFilterModel cacheListFilterModel = iterator.next();
+            if (cacheListFilterModel == filter) {
+                iterator.remove();
                 break;
             }
         }
 
-        refilteringRequired = true;
+        reFilteringRequired = true;
     }
 
     public void filterUpdate() {
-        refilteringRequired = true;
+        reFilteringRequired = true;
     }
 
-    public void setRelativeLocation(Location rl) {
-        relativeLocation = rl;
+    public void setRelativeLocation(Location relativeLocation) {
+        this.relativeLocation = relativeLocation;
     }
 
-    private void matchOrphands(Geocache g) {
-        Iterator<Waypoint> it = orphandWaypoints.iterator();
-        while (it.hasNext()) {
-            if (addWaypointToCache(g, it.next())) {
-                it.remove();
-            }
-        }
+    private void matchOrphans(Geocache geocache) {
+        orphanedWaypoints.removeIf(waypoint -> addWaypointToCache(geocache, waypoint));
     }
 
-    private static boolean addWaypointToCache(Geocache g, Waypoint w) {
-        final String parent = w.getParent();
+    private static boolean addWaypointToCache(Geocache geocache, Waypoint waypoint) {
+        final String parent = waypoint.getParent();
         if (parent != null) {
-            if (g.getCode().equals(parent)) {
-                g.add(w);
+            if (geocache.getCode().equals(parent)) {
+                geocache.addWaypoint(waypoint);
                 return true;
             }
         } else {
-            String name = w.getCode();
+            String name = waypoint.getCode();
             name = name.substring(2);
             name = "GC" + name;
 
-            if (g.getCode().equals(name)) {
-                g.add(w);
+            if (geocache.getCode().equals(name)) {
+                geocache.addWaypoint(waypoint);
                 return true;
             }
         }
         return false;
     }
 
-    public void removeCaches(ArrayList<Geocache> removeList) {
+    public void removeCaches(List<Geocache> removeList) {
         recordUndoAction();
 
         for (final Geocache remove : removeList) {
@@ -108,59 +104,53 @@ public class CacheListModel {
             }
         }
 
-        refilteringRequired = true;
+        reFilteringRequired = true;
     }
 
-    public void addCaches(ArrayList<Geocache> addList) {
+    public void addCaches(List<Geocache> addList) {
         recordUndoAction();
 
-        for (final Geocache gAdd : addList) {
+        for (final Geocache geocacheAdd : addList) {
             boolean match = false;
-            for (final Geocache gOld : list)
-                if (gOld.getCode().equals(gAdd.getCode())) {
+            for (final Geocache geocacheOld : list)
+                if (geocacheOld.getCode().equals(geocacheAdd.getCode())) {
                     match = true;
-                    gOld.update(gAdd);
+                    geocacheOld.update(geocacheAdd);
                     break;
                 }
             if (!match) {
-                addCache(gAdd);
+                addCache(geocacheAdd);
             }
         }
 
-        refilteringRequired = true;
+        reFilteringRequired = true;
     }
 
-    public ArrayList<Geocache> getList() {
-        if (!refilteringRequired) {
-            return list_filtered;
+    public List<Geocache> getList() {
+        if (!reFilteringRequired) {
+            return listFiltered;
         }
 
-        ArrayList<Geocache> filtered = new ArrayList<>(list);
+        List<Geocache> filtered = new ArrayList<>(list);
         for (final CacheListFilterModel filter : filters) {
             filtered = filter.getFiltered(filtered);
         }
 
-        refilteringRequired = false;
-        list_filtered = filtered;
+        reFilteringRequired = false;
+        listFiltered = filtered;
         return filtered;
     }
 
     public void removeCachesNotInFilter() {
         recordUndoAction();
 
-        final ArrayList<Geocache> filterList = getList();
+        final List<Geocache> filterList = getList();
 
-        Iterator<Geocache> i = list.iterator();
-        while (i.hasNext()) {
-            final Geocache g = i.next();
-            if (!filterList.contains(g)) {
-                i.remove();
-            }
-        }
+        list.removeIf(geocache -> !filterList.contains(geocache));
     }
 
     public LinkedList<Waypoint> getOrphans() {
-        return orphandWaypoints;
+        return orphanedWaypoints;
     }
 
     public int size() {
@@ -171,32 +161,32 @@ public class CacheListModel {
         return getList().get(index);
     }
 
-    public void load(String pathToGPX) throws Throwable {
+    public void load(String pathToGpx) throws Throwable {
         FileHelper.processFiles(
-                pathToGPX,
+                pathToGpx,
                 new FileHelper.InputAction() {
-                    public void process(InputStream is) throws Throwable {
-                        ArrayList<Geocache> gList = new ArrayList<>();
-                        ArrayList<Waypoint> wList = new ArrayList<>();
+                    public void process(InputStream inputStream) throws Throwable {
+                        final List<Geocache> geocacheList = new ArrayList<>();
+                        final List<Waypoint> waypointList = new ArrayList<>();
 
-                        GPX.loadFromStream(is, gList, wList);
+                        GPX.loadFromStream(inputStream, geocacheList, waypointList);
 
-                        orphandWaypoints.addAll(wList);
-                        for (final Geocache g : list) {
-                            matchOrphands(g);
+                        orphanedWaypoints.addAll(waypointList);
+                        for (final Geocache geocache : list) {
+                            matchOrphans(geocache);
                         }
 
-                        for (final Geocache g : gList) {
-                            addCache(g);
+                        for (final Geocache geocache : geocacheList) {
+                            addCache(geocache);
                         }
                     }
                 });
 
-        refilteringRequired = true;
+        reFilteringRequired = true;
     }
 
-    public void store(String listName, String pathToGPX) throws Throwable {
-        GPX.saveToFile(list, listName, pathToGPX);
+    public void store(String listName, String pathToGpx) throws Throwable {
+        GPX.saveToFile(list, listName, pathToGpx);
     }
 
     private void recordUndoAction() {
@@ -212,23 +202,23 @@ public class CacheListModel {
         }
         final UndoAction action = undoActions.remove(undoActions.size() - 1);
         list = action.getState();
-        refilteringRequired = true;
+        reFilteringRequired = true;
     }
 
     public int getUndoActionCount() {
         return undoActions.size();
     }
 
-    public CLMTableModel getTableModel() {
-        return new CLMTableModel();
+    public CacheListTableModel getTableModel() {
+        return new CacheListTableModel();
     }
 
-    public class CLMTableModel extends AbstractTableModel {
+    public class CacheListTableModel extends AbstractTableModel {
 
         private static final long serialVersionUID = -6159661237715863643L;
 
-        public String getColumnName(int col) {
-            switch (col) {
+        public String getColumnName(int column) {
+            switch (column) {
                 case 0:
                     return "Code";
                 case 1:
@@ -295,37 +285,37 @@ public class CacheListModel {
         }
 
         @Override
-        public Object getValueAt(int arg0, int arg1) {
-            final Geocache g = getObject(arg0);
+        public Object getValueAt(int rowIndex, int columnIndex) {
+            final Geocache geocache = getObject(rowIndex);
 
-            switch (arg1) {
+            switch (columnIndex) {
                 case 0:
-                    return g.getCode();
+                    return geocache.getCode();
                 case 1:
-                    return g.getName();
+                    return geocache.getName();
                 case 2:
-                    return g.getType().asNiceType();
+                    return geocache.getType().asNiceType();
                 case 3:
-                    return g.getDifficulty();
+                    return geocache.getDifficulty();
                 case 4:
-                    return g.getTerrain();
+                    return geocache.getTerrain();
                 case 5:
-                    return g.getCoordinate().getLat();
+                    return geocache.getCoordinate().getLatitude();
                 case 6:
-                    return g.getCoordinate().getLon();
+                    return geocache.getCoordinate().getLongitude();
                 case 7:
-                    final String owner = g.getOwner();
+                    final String owner = geocache.getOwner();
                     return owner != null ? owner : "";
                 case 8:
                     return relativeLocation != null
-                            ? g.getCoordinate().distanceHaversineRounded(relativeLocation)
+                            ? geocache.getCoordinate().distanceHaversineRounded(relativeLocation)
                             : "";
                 case 9:
                     final DateTime date =
-                            g.getMostRecentFoundLog(
-                                    Settings.getS(Settings.Key.GC_USERNAME),
-                                    Settings.getS(Settings.Key.OC_USERNAME));
-                    return date == null ? null : GeocacheLog.getDateStrISO8601NoTime(date);
+                            geocache.getMostRecentFoundLog(
+                                    Settings.getString(Settings.Key.GC_USERNAME),
+                                    Settings.getString(Settings.Key.OC_USERNAME));
+                    return date == null ? null : GeocacheLog.getDateStrIso8601NoTime(date);
 
                 default:
                     return null;

@@ -4,6 +4,7 @@ import cmanager.geo.Geocache;
 import cmanager.global.Constants;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Map;
 
 public class ShadowList {
 
@@ -14,7 +15,7 @@ public class ShadowList {
 
     public static void updateShadowList() throws IOException {
         // TODO: Enable once the API is working again.
-        // delete list if it is older than 1 month
+        // Delete list if it is older than 1 month.
         /*final File file = new File(SHADOWLIST_PATH);
         if (file.exists()) {
             DateTime fileTime = new DateTime(file.lastModified());
@@ -24,17 +25,22 @@ public class ShadowList {
                 return;
             }
 
-            file.delete();
+            if (!file.delete()) {
+                System.out.println("Error deleting file " + SHADOWLIST_PATH + ".");
+            }
         }
 
-        new File(SHADOWLIST_FOLDER).mkdirs();
+        final boolean success = new File(SHADOWLIST_FOLDER).mkdirs();
+        if (!success) {
+            System.out.println("Error creating directory " + SHADOWLIST_FOLDER + ".");
+        }
 
         // download list
         final URL url = new URL("https://www.opencaching.de/api/gc2oc.php");
-        ReadableByteChannel rbc = Channels.newChannel(url.openStream());
-        FileOutputStream fos = new FileOutputStream(SHADOWLIST_PATH);
-        fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
-        fos.close();*/
+        ReadableByteChannel readableByteChannel = Channels.newChannel(url.openStream());
+        FileOutputStream fileOutputStream = new FileOutputStream(SHADOWLIST_PATH);
+        fileOutputStream.getChannel().transferFrom(readableByteChannel, 0, Long.MAX_VALUE);
+        fileOutputStream.close();*/
     }
 
     public static ShadowList loadShadowList() throws Throwable {
@@ -43,18 +49,16 @@ public class ShadowList {
         System.out.println(
                 "The shadow list retrieval has been disabled temporarily as the API endpoint seems to be broken for now.");
         // TODO: Enable after the GZip archive is valid again.
-        /*FileHelper.processFiles(SHADOWLIST_PATH, new InputAction() {
+        /*FileHelper.processFiles(SHADOWLIST_PATH, new FileHelper.InputAction() {
             @Override
-            public void process(InputStream is) throws Throwable
+            public void process(InputStream inputStream) throws Throwable
             {
-                BufferedReader br = new BufferedReader(new InputStreamReader(is));
-                String line = null;
-                while ((line = br.readLine()) != null)
-                {
-                    String token[] = line.split(",");
+                BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
+                String line;
+                while ((line = bufferedReader.readLine()) != null) {
+                    final String[] token = line.split(",");
                     // Column 2 == "1" means verified by a human
-                    if (token[2].equals("1"))
-                    {
+                    if (token[2].equals("1")) {
                         // <GC, OC>
                         shadowList.put(token[0], token[1]);
                     }
@@ -65,13 +69,13 @@ public class ShadowList {
         return new ShadowList(shadowList);
     }
 
-    private HashMap<String, String> shadowList;
+    private final Map<String, String> shadowList;
 
-    private ShadowList(HashMap<String, String> shadowList) {
+    private ShadowList(Map<String, String> shadowList) {
         this.shadowList = shadowList;
     }
 
-    public String getMatchingOCCode(String gcCode) {
+    public String getMatchingOcCode(String gcCode) {
         return shadowList.get(gcCode);
     }
 
@@ -81,14 +85,14 @@ public class ShadowList {
 
     public void postToShadowList(Geocache gc, Geocache oc) throws Exception {
         // TODO: Enable once the API is working again.
-        // do not repost items which are already upstream
+        // Do not repost items which are already upstream.
         /*if (contains(gc.getCode())) {
             return;
         }
 
-        // do not repost local findings
-        final File f = new File(SHADOWLIST_POSTED_FOLDER + "/" + gc.getCode());
-        if (f.exists()) {
+        // do not repost local findings.
+        final File file = new File(SHADOWLIST_POSTED_FOLDER + "/" + gc.getCode());
+        if (file.exists()) {
             return;
         }
 
@@ -104,11 +108,11 @@ public class ShadowList {
                         + "+"
                         + Version.VERSION;
 
-        // post
+        // Post.
         HTTP.get(url);
 
-        // remember our post
+        // Remember our post.
         new File(SHADOWLIST_POSTED_FOLDER).mkdirs();
-        f.createNewFile();*/
+        file.createNewFile();*/
     }
 }

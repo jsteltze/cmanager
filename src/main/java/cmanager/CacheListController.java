@@ -1,6 +1,6 @@
 package cmanager;
 
-import cmanager.CacheListModel.CLMTableModel;
+import cmanager.CacheListModel.CacheListTableModel;
 import cmanager.geo.Geocache;
 import cmanager.geo.Location;
 import cmanager.gui.CacheListView;
@@ -17,6 +17,7 @@ import java.io.Serializable;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.List;
 import javax.swing.JDesktopPane;
 import javax.swing.JInternalFrame;
 import javax.swing.JMenu;
@@ -28,30 +29,30 @@ import javax.swing.table.TableColumn;
 
 public class CacheListController {
 
-    private static final ArrayList<CacheListController> controllerList =
-            new ArrayList<CacheListController>();
+    private static final List<CacheListController> controllerList = new ArrayList<>();
 
-    public static CacheListController newCLC(
+    public static CacheListController newCacheListController(
             JDesktopPane desktop,
-            JMenu mnWindows,
+            JMenu menuWindows,
             Location relativeLocation,
             String path,
-            CacheListView.RunLocationDialogI ldi)
+            CacheListView.RunLocationDialogI runLocationDialog)
             throws Throwable {
-        final CacheListController clc =
-                new CacheListController(desktop, mnWindows, relativeLocation, path, ldi);
-        controllerList.add(clc);
-        return clc;
+        final CacheListController cacheListController =
+                new CacheListController(
+                        desktop, menuWindows, relativeLocation, path, runLocationDialog);
+        controllerList.add(cacheListController);
+        return cacheListController;
     }
 
-    public static void remove(CacheListController clc) {
-        controllerList.remove(clc);
+    public static void remove(CacheListController cacheListController) {
+        controllerList.remove(cacheListController);
     }
 
-    private static CacheListController getCacheListController(JInternalFrame jif) {
-        for (final CacheListController clc : controllerList) {
-            if (clc.view == jif) {
-                return clc;
+    private static CacheListController getCacheListController(JInternalFrame jInternalFrame) {
+        for (final CacheListController cacheListController : controllerList) {
+            if (cacheListController.view == jInternalFrame) {
+                return cacheListController;
             }
         }
         return null;
@@ -62,89 +63,94 @@ public class CacheListController {
             return null;
         }
 
-        final JInternalFrame jif = desktop.getAllFrames()[0];
-        return CacheListController.getCacheListController(jif);
+        final JInternalFrame jInternalFrame = desktop.getAllFrames()[0];
+        return CacheListController.getCacheListController(jInternalFrame);
     }
 
     public static CacheListView getTopView(JDesktopPane desktop) {
         return (CacheListView) desktop.getAllFrames()[0];
     }
 
-    public static void setAllRelativeLocations(Location rl) {
-        for (final CacheListController clc : controllerList) {
-            clc.setRelativeLocation(rl);
+    public static void setAllRelativeLocations(Location relativeLocation) {
+        for (final CacheListController cacheListController : controllerList) {
+            cacheListController.setRelativeLocation(relativeLocation);
         }
     }
 
-    public static void storePersistanceInfo(JDesktopPane desktop) throws IOException {
+    public static void storePersistenceInfo(JDesktopPane desktop) throws IOException {
         final CacheListController top = getTopViewCacheController(desktop);
 
-        final ArrayList<PersistenceInfo> pi = new ArrayList<>();
-        for (final CacheListController clc : controllerList) {
-            if (clc == top) {
+        final ArrayList<PersistenceInfo> persistenceInfos = new ArrayList<>();
+        for (final CacheListController cacheListController : controllerList) {
+            if (cacheListController == top) {
                 continue;
             }
-            pi.add(clc.getPersistenceO());
+            persistenceInfos.add(cacheListController.getPersistenceO());
         }
         if (top != null) {
-            pi.add(top.getPersistenceO());
+            persistenceInfos.add(top.getPersistenceO());
         }
 
-        Settings.setSerialized(Settings.Key.CLC_LIST, pi);
+        Settings.setSerialized(Settings.Key.CLC_LIST, persistenceInfos);
     }
 
-    public static void reopenPersitantCLCs(
+    public static void reopenPersistantCacheListControllers(
             JDesktopPane desktop,
-            JMenu mnWindows,
+            JMenu menuWindows,
             Location relativeLocation,
-            CacheListView.RunLocationDialogI ldi) {
-        ArrayList<PersistenceInfo> pi;
+            CacheListView.RunLocationDialogI runLocationDialog) {
+        List<PersistenceInfo> persistenceInfos;
         try {
-            pi = Settings.getSerialized(Settings.Key.CLC_LIST);
-            if (pi == null) {
+            persistenceInfos = Settings.getSerialized(Settings.Key.CLC_LIST);
+            if (persistenceInfos == null) {
                 return;
             }
-        } catch (Throwable t) {
-            ExceptionPanel.showErrorDialog(desktop, t);
+        } catch (Throwable throwable) {
+            ExceptionPanel.showErrorDialog(desktop, throwable);
             return;
         }
 
-        for (final PersistenceInfo aPI : pi) {
+        for (final PersistenceInfo persistenceInfo : persistenceInfos) {
             try {
-                if (new File(aPI.getPath()).exists()) {
-                    newCLC(desktop, mnWindows, relativeLocation, aPI.getPath(), ldi);
+                if (new File(persistenceInfo.getPath()).exists()) {
+                    newCacheListController(
+                            desktop,
+                            menuWindows,
+                            relativeLocation,
+                            persistenceInfo.getPath(),
+                            runLocationDialog);
                 }
-            } catch (Throwable t) {
-                ExceptionPanel.showErrorDialog(desktop, t);
+            } catch (Throwable throwable) {
+                ExceptionPanel.showErrorDialog(desktop, throwable);
             }
         }
     }
 
-    private CacheListModel model = new CacheListModel();
+    private final CacheListModel cacheListModel = new CacheListModel();
     private CacheListView view = null;
     private Path path = null;
-    private CacheListController THIS = this;
-    private Boolean modifiedAndUnsafed = null;
-    private JMenuItem mnWindow = null;
+    private final CacheListController THIS = this;
+    private Boolean modifiedAndUnsaved = null;
+    private JMenuItem menuWindow = null;
 
     @SuppressWarnings("unused")
     private CacheListController() {}
 
     public CacheListController(
             final JDesktopPane desktop,
-            final JMenu mnWindows,
+            final JMenu menuWindows,
             Location relativeLocation,
             String path,
-            CacheListView.RunLocationDialogI ldi)
+            CacheListView.RunLocationDialogI runLocationDialog)
             throws Throwable {
         if (path != null) {
-            model.load(path);
+            cacheListModel.load(path);
         }
 
         setRelativeLocation(relativeLocation);
 
         // set up the view
-        view = new CacheListView(this, ldi);
+        view = new CacheListView(this, runLocationDialog);
         // view.setMaximizable(true);
         view.setMinimumSize(new Dimension(100, 100));
         view.setClosable(true);
@@ -153,25 +159,25 @@ public class CacheListController {
         // view.setIconifiable(false);
 
         if (path == null) {
-            modifiedAndUnsafed = true;
+            modifiedAndUnsaved = true;
         } else {
-            modifiedAndUnsafed = false;
+            modifiedAndUnsaved = false;
             this.path = Paths.get(path);
         }
 
         view.addInternalFrameListener(
                 new InternalFrameAdapter() {
                     @Override
-                    public void internalFrameClosing(InternalFrameEvent e) {
+                    public void internalFrameClosing(InternalFrameEvent internalFrameEvent) {
                         CacheListController.remove(THIS);
-                        mnWindows.remove(mnWindow);
+                        menuWindows.remove(menuWindow);
                     }
                 });
 
         desktop.add(view);
         try {
             view.setMaximum(true);
-        } catch (PropertyVetoException e) {
+        } catch (PropertyVetoException ignored) {
         }
 
         final JTable table = view.getTable();
@@ -181,33 +187,33 @@ public class CacheListController {
         setWidth(table, 4, 60);
         setWidth(table, 7, 150);
 
-        this.mnWindow = new JMenuItem("");
-        mnWindows.add(this.mnWindow);
-        this.mnWindow.addActionListener(
+        this.menuWindow = new JMenuItem("");
+        menuWindows.add(this.menuWindow);
+        this.menuWindow.addActionListener(
                 new ActionListener() {
                     public void actionPerformed(ActionEvent arg0) {
                         desktop.moveToFront(view);
                     }
                 });
 
-        updateOverallOptik();
+        updateOverallOptics();
     }
 
     public void addFromFile(String path) throws Throwable {
-        model.load(path);
+        cacheListModel.load(path);
         cachesAddedOrRemoved();
     }
 
     public CacheListModel getModel() {
-        return model;
+        return cacheListModel;
     }
 
     public CacheListView getView() {
         return view;
     }
 
-    public void setRelativeLocation(Location rl) {
-        model.setRelativeLocation(rl);
+    public void setRelativeLocation(Location relativeLocation) {
+        cacheListModel.setRelativeLocation(relativeLocation);
     }
 
     private String getName() {
@@ -222,27 +228,27 @@ public class CacheListController {
         if (title == null) {
             title = "unnamed";
         }
-        if (modifiedAndUnsafed) {
+        if (modifiedAndUnsaved) {
             title += "*";
         }
         view.setTitle(title);
-        mnWindow.setText(title);
+        menuWindow.setText(title);
 
-        int count = model.size();
+        int count = cacheListModel.size();
         view.setCacheCount(count);
 
-        for (final Geocache g : model.getList()) {
-            count += g.getWaypoints().size();
+        for (final Geocache geocache : cacheListModel.getList()) {
+            count += geocache.getWaypoints().size();
         }
-        view.setWaypointCount(count, model.getOrphans().size());
+        view.setWaypointCount(count, cacheListModel.getOrphans().size());
     }
 
     private void cachesAddedOrRemoved() {
-        modifiedAndUnsafed = true;
-        updateOverallOptik();
+        modifiedAndUnsaved = true;
+        updateOverallOptics();
     }
 
-    private void updateOverallOptik() {
+    private void updateOverallOptics() {
         updateTitleAndCount();
         view.resetView();
         view.updateCachePanelToSelection();
@@ -250,30 +256,30 @@ public class CacheListController {
     }
 
     public void addFilter(CacheListFilterModel filter) {
-        model.addFilter(filter);
+        cacheListModel.addFilter(filter);
         view.addFilter(filter);
-        updateOverallOptik();
+        updateOverallOptics();
     }
 
     public void removeFilter(CacheListFilterModel filter) {
-        model.removeFilter(filter);
-        updateOverallOptik();
+        cacheListModel.removeFilter(filter);
+        updateOverallOptics();
     }
 
     public void filtersUpdated() {
-        updateOverallOptik();
+        updateOverallOptics();
     }
 
     public void removeCachesNotInFilter() {
-        model.removeCachesNotInFilter();
+        cacheListModel.removeCachesNotInFilter();
         cachesAddedOrRemoved();
     }
 
-    public void store(Path pathToGPX) throws Throwable {
-        this.path = pathToGPX;
-        model.store(getName(), pathToGPX.toString());
+    public void store(Path pathToGpx) throws Throwable {
+        this.path = pathToGpx;
+        cacheListModel.store(getName(), pathToGpx.toString());
 
-        modifiedAndUnsafed = false;
+        modifiedAndUnsaved = false;
         updateTitleAndCount();
     }
 
@@ -287,54 +293,54 @@ public class CacheListController {
     }
 
     public void removeSelectedCaches() {
-        final ArrayList<Geocache> removeList = view.getSelectedCaches();
+        final List<Geocache> removeList = view.getSelectedCaches();
         if (removeList.size() > 0) {
-            model.removeCaches(removeList);
+            cacheListModel.removeCaches(removeList);
             cachesAddedOrRemoved();
         }
     }
 
-    private static ArrayList<Geocache> copyList = new ArrayList<>();
+    private static final ArrayList<Geocache> copyList = new ArrayList<>();
 
     public void copySelected() {
-        final ArrayList<Geocache> selected = view.getSelectedCaches();
+        final List<Geocache> selected = view.getSelectedCaches();
         copyList.clear();
         copyList.ensureCapacity(selected.size());
-        for (final Geocache g : selected) {
-            copyList.add(ObjectHelper.copy(g));
+        for (final Geocache geocache : selected) {
+            copyList.add(ObjectHelper.copy(geocache));
         }
     }
 
     public void cutSelected() {
-        final ArrayList<Geocache> selected = view.getSelectedCaches();
+        final List<Geocache> selected = view.getSelectedCaches();
         copyList.clear();
         copyList.ensureCapacity(selected.size());
         copyList.addAll(selected);
         if (!copyList.isEmpty()) {
-            model.removeCaches(copyList);
+            cacheListModel.removeCaches(copyList);
             cachesAddedOrRemoved();
         }
     }
 
     public void pasteSelected() {
         if (!copyList.isEmpty()) {
-            model.addCaches(copyList);
+            cacheListModel.addCaches(copyList);
             cachesAddedOrRemoved();
         }
     }
 
-    public CLMTableModel getTableModel() {
-        return model.getTableModel();
+    public CacheListTableModel getTableModel() {
+        return cacheListModel.getTableModel();
     }
 
     public void replayLastUndoAction() {
-        model.replayLastUndoAction();
-        modifiedAndUnsafed = true;
+        cacheListModel.replayLastUndoAction();
+        modifiedAndUnsaved = true;
         cachesAddedOrRemoved();
     }
 
     public int getUndoActionCount() {
-        return model.getUndoActionCount();
+        return cacheListModel.getUndoActionCount();
     }
 
     private PersistenceInfo getPersistenceO() {
@@ -345,7 +351,7 @@ public class CacheListController {
 
         private static final long serialVersionUID = 1L;
 
-        private String path;
+        private final String path;
 
         public PersistenceInfo(String path) {
             this.path = path;

@@ -15,48 +15,68 @@ public class SearchCache {
             Constants.CACHE_FOLDER + "OC.OKAPI.emptySearches/";
     private static boolean initDone = false;
 
-    private static String searchToFileName(Geocache g, String excludeUUID) {
-        final String name = g.getCode() + (excludeUUID == null ? "" : " " + excludeUUID);
+    private static String searchToFileName(Geocache geocache, String excludeUuid) {
+        final String name = geocache.getCode() + (excludeUuid == null ? "" : " " + excludeUuid);
         return OKAPI_CACHE_FOLDER + name;
     }
 
-    public static synchronized void setEmptySearch(Geocache g, String excludeUUID)
+    public static synchronized void setEmptySearch(Geocache geocache, String excludeUuid)
             throws IOException {
-        final File f = new File(searchToFileName(g, excludeUUID));
-        if (f.exists()) {
-            f.delete();
+        final String filename = searchToFileName(geocache, excludeUuid);
+        final File file = new File(filename);
+        if (file.exists()) {
+            final boolean success = file.delete();
+            if (!success) {
+                // System.out.println("Error deleting file " + filename + ".");
+            }
         }
 
-        f.createNewFile();
+        final boolean success = file.createNewFile();
+        if (!success) {
+            // System.out.println("Error creating file " + filename + ".");
+        }
     }
 
-    public static synchronized boolean isEmptySearch(Geocache g, String excludeUUID)
-            throws ClassNotFoundException, IOException {
+    public static synchronized boolean isEmptySearch(Geocache geocache, String excludeUuid) {
         if (!initDone) {
-            new File(OKAPI_CACHE_FOLDER).mkdirs();
+            final boolean success = new File(OKAPI_CACHE_FOLDER).mkdirs();
+            if (!success) {
+                // System.out.println("Error creating directory " + OKAPI_CACHE_FOLDER + ".");
+            }
 
-            // if there are files in the legacy foler, move them
-            // into the new folder
-            for (final File f : new File(LEGACY_CACHE_FOLDER).listFiles()) {
-                if (f.getName().startsWith("GC")) {
-                    f.renameTo(new File(OKAPI_CACHE_FOLDER + f.getName()));
+            // If there are files in the legacy folder, move them into the new folder.
+            final File[] legacyFiles = new File(LEGACY_CACHE_FOLDER).listFiles();
+            if (legacyFiles != null) {
+                for (final File file : legacyFiles) {
+                    if (file.getName().startsWith("GC")) {
+                        final String filename = OKAPI_CACHE_FOLDER + file.getName();
+                        final boolean renamingSuccess = file.renameTo(new File(filename));
+                        if (!renamingSuccess) {
+                            System.out.println(
+                                    "Error renaming file "
+                                            + file.getName()
+                                            + " to "
+                                            + filename
+                                            + ".");
+                        }
+                    }
                 }
             }
 
             initDone = true;
         }
 
-        final File f = new File(searchToFileName(g, excludeUUID));
-        if (f.exists()) {
+        final File file = new File(searchToFileName(geocache, excludeUuid));
+        if (file.exists()) {
             final int randomMonthCount = -1 * ThreadLocalRandom.current().nextInt(4, 12 + 1);
             final int randomDayCount = -1 * ThreadLocalRandom.current().nextInt(0, 31 + 1);
             DateTime now = new DateTime();
             now = now.plusMonths(randomMonthCount);
             now = now.plusDays(randomDayCount);
 
-            // outdated?
-            if (now.isAfter(new DateTime(f.lastModified()))) {
-                f.delete();
+            // Outdated?
+            if (now.isAfter(new DateTime(file.lastModified()))) {
+                file.delete();
                 return false;
             } else {
                 return true;

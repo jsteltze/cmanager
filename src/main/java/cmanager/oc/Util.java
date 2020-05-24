@@ -3,9 +3,10 @@ package cmanager.oc;
 import cmanager.CacheListModel;
 import cmanager.geo.Geocache;
 import cmanager.geo.GeocacheComparator;
-import cmanager.okapi.OKAPI;
+import cmanager.okapi.Okapi;
 import cmanager.okapi.User;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -16,20 +17,20 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class Util {
 
-    static final ArrayList<Geocache> okapiRuntimeCache = new ArrayList<>();
+    static final List<Geocache> OKAPI_RUNTIME_CACHE = new ArrayList<>();
 
     /**
      * @param stopBackgroundThread Processing is interrupted if this boolean is set true
-     * @param clm The model supplying the caches to check
-     * @param oi Callback functions
+     * @param cacheListModel The model supplying the caches to check
+     * @param outputInterface Callback functions
      * @param user OCUser object for OKAPI authentication
      * @param uuid The uuid of the OC user to exclude caches already found by this user
      * @throws Throwable
      */
     public static void findOnOc(
             final AtomicBoolean stopBackgroundThread,
-            final CacheListModel clm,
-            final OutputInterface oi,
+            final CacheListModel cacheListModel,
+            final OutputInterface outputInterface,
             final User user,
             final String uuid,
             final ShadowList shadowList)
@@ -39,10 +40,10 @@ public class Util {
         // Thread pool which establishes 10 concurrent connection at max
         final ExecutorService service = Executors.newFixedThreadPool(10);
         // Variable to hold an exception throwable if one is thrown by a task
-        final AtomicReference<Throwable> throwable = new AtomicReference<Throwable>(null);
+        final AtomicReference<Throwable> throwable = new AtomicReference<>(null);
 
         // Create a task for each cache and submit it to the thread pool.
-        for (final Geocache gc : clm.getList()) {
+        for (final Geocache geocache : cacheListModel.getList()) {
             if (throwable.get() != null) {
                 break;
             }
@@ -57,18 +58,20 @@ public class Util {
                             if (stopBackgroundThread.get()) return null;
 
                             try {
-                                oi.setProgress(count.get(), clm.getList().size());
+                                outputInterface.setProgress(
+                                        count.get(), cacheListModel.getList().size());
                                 count.getAndIncrement();
 
-                                if (SearchCache.isEmptySearch(gc, uuid)) {
+                                if (SearchCache.isEmptySearch(geocache, uuid)) {
                                     return null;
                                 }
 
-                                // Search shadow list for a duplicate
+                                // Search shadow list for a duplicate.
                                 // TODO: Enable if API works again.
-                                /*final String ocCode = shadowList.getMatchingOCCode(gc.getCode());
+                                /*final String ocCode =
+                                        shadowList.getMatchingOcCode(geocache.getCode());
                                 if (ocCode != null) {
-                                    Geocache oc = OKAPI.getCacheBuffered(ocCode, okapiRuntimeCache);
+                                    Geocache oc = OKAPI.getCacheBuffered(ocCode, OKAPI_RUNTIME_CACHE);
                                     OKAPI.completeCacheDetails(oc);
                                     OKAPI.updateFoundStatus(user, oc);
                                     // Found status can not be retrieved without user
@@ -76,27 +79,31 @@ public class Util {
                                     // user has not found
                                     // the cache
                                     if (user == null || !oc.getIsFound()) {
-                                        oi.match(gc, oc);
+                                        outputInterface.match(geocache, oc);
                                         return null;
                                     }
                                 }*/
 
-                                // Search for duplicate using the OKAPI
-                                final double searchRadius = gc.hasVolatileStart() ? 1 : 0.05;
-                                final ArrayList<Geocache> similar =
-                                        OKAPI.getCachesAround(
-                                                user, uuid, gc, searchRadius, okapiRuntimeCache);
+                                // Search for duplicate using the OKAPI.
+                                final double searchRadius = geocache.hasVolatileStart() ? 1 : 0.05;
+                                final List<Geocache> similar =
+                                        Okapi.getCachesAround(
+                                                user,
+                                                uuid,
+                                                geocache,
+                                                searchRadius,
+                                                OKAPI_RUNTIME_CACHE);
                                 boolean match = false;
-                                for (final Geocache oc : similar) {
-                                    if (GeocacheComparator.similar(oc, gc)) {
-                                        OKAPI.completeCacheDetails(oc);
-                                        oi.match(gc, oc);
+                                for (final Geocache opencache : similar) {
+                                    if (GeocacheComparator.similar(opencache, geocache)) {
+                                        Okapi.completeCacheDetails(opencache);
+                                        outputInterface.match(geocache, opencache);
                                         match = true;
                                     }
                                 }
 
                                 if (!match) {
-                                    SearchCache.setEmptySearch(gc, uuid);
+                                    SearchCache.setEmptySearch(geocache, uuid);
                                 }
                             } catch (Throwable t) {
                                 throwable.set(t);
@@ -109,19 +116,20 @@ public class Util {
         }
 
         service.shutdown();
-        service.awaitTermination(
-                Long.MAX_VALUE, TimeUnit.DAYS); // incredible high delay but still ugly
+        // Incredible high delay but still ugly.
+        service.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
 
         if (throwable.get() != null) {
             throw throwable.get();
         }
 
-        oi.setProgress(clm.getList().size(), clm.getList().size());
+        outputInterface.setProgress(
+                cacheListModel.getList().size(), cacheListModel.getList().size());
     }
 
     public interface OutputInterface {
         void setProgress(Integer count, Integer max);
 
-        void match(Geocache gc, Geocache oc);
+        void match(Geocache geocache, Geocache opencache);
     }
 }

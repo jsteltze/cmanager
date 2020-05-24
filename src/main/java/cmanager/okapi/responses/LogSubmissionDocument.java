@@ -1,13 +1,18 @@
 package cmanager.okapi.responses;
 
+import com.google.gson.annotations.SerializedName;
 import java.util.List;
 
 public class LogSubmissionDocument {
 
     private Boolean success;
     private String message;
-    private String log_uuid;
-    private List<String> log_uuids;
+
+    @SerializedName("log_uuid")
+    private String logUuid;
+
+    @SerializedName("log_uuids")
+    private List<String> logUuids;
 
     public Boolean isSuccess() {
         return success;
@@ -18,6 +23,6 @@ public class LogSubmissionDocument {
     }
 
     public String getLogUuid() {
-        return log_uuid;
+        return logUuid;
     }
 }

@@ -7,48 +7,53 @@ import java.io.InputStreamReader;
 import java.net.ConnectException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 
-public class HTTP {
+public class Http {
 
     public static String get(String url) throws Exception {
-        ConnectException ce = null;
+        ConnectException connectException;
 
         int count = 0;
         do {
             try {
-                return get_(url);
+                return getInternal(url);
             } catch (ConnectException e) {
-                ce = e;
+                connectException = e;
             }
         } while (++count < 3);
 
-        throw ce;
+        throw connectException;
     }
 
     // HTTP GET request
-    private static String get_(String url) throws UnexpectedStatusCode, IOException {
+    private static String getInternal(String url) throws UnexpectedStatusCode, IOException {
         final URL obj = new URL(url);
         final HttpURLConnection con = (HttpURLConnection) obj.openConnection();
 
-        // optional default is GET
+        // Optional default is GET.
         con.setRequestMethod("GET");
 
-        // add request header
+        // Add request header.
         con.setRequestProperty("User-Agent", Constants.HTTP_USER_AGENT);
 
-        BufferedReader in;
+        BufferedReader bufferedReader;
         try {
-            in = new BufferedReader(new InputStreamReader(con.getInputStream(), "UTF8"));
-        } catch (IOException e) {
-            in = new BufferedReader(new InputStreamReader(con.getErrorStream(), "UTF8"));
+            bufferedReader =
+                    new BufferedReader(
+                            new InputStreamReader(con.getInputStream(), StandardCharsets.UTF_8));
+        } catch (IOException exception) {
+            bufferedReader =
+                    new BufferedReader(
+                            new InputStreamReader(con.getErrorStream(), StandardCharsets.UTF_8));
         }
 
         String inputLine;
-        StringBuffer response = new StringBuffer();
-        while ((inputLine = in.readLine()) != null) {
+        final StringBuilder response = new StringBuilder();
+        while ((inputLine = bufferedReader.readLine()) != null) {
             response.append(inputLine);
         }
-        in.close();
+        bufferedReader.close();
 
         final int statusCode = con.getResponseCode();
         if (statusCode != 200) {

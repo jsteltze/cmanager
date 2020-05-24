@@ -4,7 +4,7 @@ public class UnexpectedLogStatus extends Exception {
 
     private static final long serialVersionUID = -1132973286480626832L;
 
-    private String responseMessage;
+    private final String responseMessage;
 
     public UnexpectedLogStatus(String responseMessage) {
         super("Unexpected log status");

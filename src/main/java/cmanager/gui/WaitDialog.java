@@ -12,8 +12,6 @@ public class WaitDialog extends JDialog {
 
     private static final long serialVersionUID = -1281433856562055074L;
 
-    private final JPanel contentPanel = new JPanel();
-
     /** Create the dialog. */
     public WaitDialog() {
         setBounds(100, 100, 450, 100);
@@ -21,12 +19,13 @@ public class WaitDialog extends JDialog {
         setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
 
         getContentPane().setLayout(new BorderLayout());
+        final JPanel contentPanel = new JPanel();
         contentPanel.setBorder(new LineBorder(new Color(0, 0, 0)));
         getContentPane().add(contentPanel, BorderLayout.CENTER);
         contentPanel.setLayout(new BorderLayout(0, 0));
 
-        final JLabel lblPleaseStandBy = new JLabel("Please stand by...");
-        lblPleaseStandBy.setHorizontalAlignment(SwingConstants.CENTER);
-        contentPanel.add(lblPleaseStandBy);
+        final JLabel labelPleaseStandBy = new JLabel("Please stand by...");
+        labelPleaseStandBy.setHorizontalAlignment(SwingConstants.CENTER);
+        contentPanel.add(labelPleaseStandBy);
     }
 }

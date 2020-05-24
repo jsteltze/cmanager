@@ -59,7 +59,7 @@ public class GeocacheType implements Serializable {
         return TYPE.get(type, 0);
     }
 
-    public String asGCType() {
+    public String asGcType() {
         final String gc = TYPE.get(type, 1);
         return gc != null ? gc : TYPE.get(type, 2);
     }

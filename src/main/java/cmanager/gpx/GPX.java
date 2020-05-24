@@ -10,12 +10,13 @@ import cmanager.global.Constants;
 import cmanager.global.Version;
 import cmanager.gui.ExceptionPanel;
 import cmanager.xml.Element;
-import cmanager.xml.Element.XMLAttribute;
+import cmanager.xml.Element.XmlAttribute;
 import cmanager.xml.Parser;
 import cmanager.xml.Parser.XMLParserCallbackI;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -28,13 +29,13 @@ import org.joda.time.format.ISODateTimeFormat;
 public class GPX {
 
     public static void loadFromStream(
-            InputStream is, final ArrayList<Geocache> gList, final ArrayList<Waypoint> wList)
+            InputStream inputStream, final List<Geocache> geocaches, final List<Waypoint> waypoints)
             throws Throwable {
         final ExecutorService service =
                 Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2);
 
         Parser.parse(
-                is,
+                inputStream,
                 new XMLParserCallbackI() {
                     public boolean elementFinished(final Element element) {
                         if (!element.is("wpt")) {
@@ -44,23 +45,23 @@ public class GPX {
                         service.submit(
                                 new Runnable() {
                                     public void run() {
-                                        Geocache g = null;
-                                        Waypoint w = null;
+                                        Geocache geocache = null;
+                                        Waypoint waypoint = null;
 
                                         try {
-                                            w = toWaypoint(element);
-                                            g = toCache(element);
-                                        } catch (NullPointerException ex) {
-                                            ExceptionPanel.display(ex);
+                                            waypoint = toWaypoint(element);
+                                            geocache = toCache(element);
+                                        } catch (NullPointerException exception) {
+                                            ExceptionPanel.display(exception);
                                         }
 
-                                        if (g != null) {
-                                            synchronized (gList) {
-                                                gList.add(g);
+                                        if (geocache != null) {
+                                            synchronized (geocaches) {
+                                                geocaches.add(geocache);
                                             }
-                                        } else if (w != null) {
-                                            synchronized (wList) {
-                                                wList.add(w);
+                                        } else if (waypoint != null) {
+                                            synchronized (waypoints) {
+                                                waypoints.add(waypoint);
                                             }
                                         }
                                     }
@@ -70,7 +71,7 @@ public class GPX {
 
                     public boolean elementLocatedCorrectly(Element element, Element parent) {
                         if (element.is("gpx")) {
-                            return parent.getName() == null ? true : false;
+                            return parent.getName() == null;
                         }
                         if (element.is("wpt")) {
                             return parent.is("gpx");
@@ -81,12 +82,12 @@ public class GPX {
                 });
 
         service.shutdown();
-        // incredible high delay but still ugly
+        // Incredible high delay but still ugly.
         service.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
     }
 
-    private static Waypoint toWaypoint(Element wpt) {
-        Coordinate coordinate = null;
+    private static Waypoint toWaypoint(Element waypointElement) {
+        Coordinate coordinate;
         String code = null;
         String description = null;
         String symbol = null;
@@ -94,33 +95,33 @@ public class GPX {
         String parent = null;
         String date = null;
 
-        double lat = 0.0;
-        double lon = 0.0;
-        for (final XMLAttribute a : wpt.getAttributes()) {
-            if (a.is("lat")) {
-                lat = a.getValueD();
-            } else if (a.is("lon")) {
-                lon = a.getValueD();
+        double latitude = 0.0;
+        double longitude = 0.0;
+        for (final XmlAttribute attribute : waypointElement.getAttributes()) {
+            if (attribute.is("lat")) {
+                latitude = attribute.getValueDouble();
+            } else if (attribute.is("lon")) {
+                longitude = attribute.getValueDouble();
             }
         }
 
-        coordinate = new Coordinate(lat, lon);
+        coordinate = new Coordinate(latitude, longitude);
 
-        for (final Element e : wpt.getChildren()) {
-            if (e.is("name")) {
-                code = e.getUnescapedBody();
-            } else if (e.is("desc")) {
-                description = e.getUnescapedBody();
-            } else if (e.is("sym")) {
-                symbol = e.getUnescapedBody();
-            } else if (e.is("type")) {
-                type = e.getUnescapedBody();
-            } else if (e.is("time")) {
-                date = e.getUnescapedBody();
-            } else if (e.is("gsak:wptExtension")) {
-                for (final Element ee : e.getChildren()) {
-                    if (ee.is("gsak:Parent")) {
-                        parent = ee.getUnescapedBody();
+        for (final Element element : waypointElement.getChildren()) {
+            if (element.is("name")) {
+                code = element.getUnescapedBody();
+            } else if (element.is("desc")) {
+                description = element.getUnescapedBody();
+            } else if (element.is("sym")) {
+                symbol = element.getUnescapedBody();
+            } else if (element.is("type")) {
+                type = element.getUnescapedBody();
+            } else if (element.is("time")) {
+                date = element.getUnescapedBody();
+            } else if (element.is("gsak:wptExtension")) {
+                for (final Element extensionElement : element.getChildren()) {
+                    if (extensionElement.is("gsak:Parent")) {
+                        parent = extensionElement.getUnescapedBody();
                     }
                 }
             }
@@ -131,11 +132,11 @@ public class GPX {
         return waypoint;
     }
 
-    private static Geocache toCache(Element wpt) {
+    private static Geocache toCache(Element waypointElement) {
         String code = null;
         String urlName = null;
         String cacheName = null;
-        Coordinate coordinate = null;
+        Coordinate coordinate;
         Double difficulty = null;
         Double terrain = null;
         String type = null;
@@ -148,121 +149,123 @@ public class GPX {
         Boolean archived = null;
         Boolean available = null;
         Boolean gcPremium = null;
-        Integer favPoints = null;
+        Integer favoritePoints = null;
 
-        final ArrayList<GeocacheAttribute> attributes = new ArrayList<>();
-        final ArrayList<GeocacheLog> logs = new ArrayList<>();
+        final List<GeocacheAttribute> attributes = new ArrayList<>();
+        final List<GeocacheLog> logs = new ArrayList<>();
 
-        double lat = 0.0;
-        double lon = 0.0;
-        for (final XMLAttribute a : wpt.getAttributes()) {
-            if (a.is("lat")) {
-                lat = a.getValueD();
-            } else if (a.is("lon")) {
-                lon = a.getValueD();
+        double latitude = 0.0;
+        double longitude = 0.0;
+        for (final XmlAttribute attribute : waypointElement.getAttributes()) {
+            if (attribute.is("lat")) {
+                latitude = attribute.getValueDouble();
+            } else if (attribute.is("lon")) {
+                longitude = attribute.getValueDouble();
             }
         }
-        coordinate = new Coordinate(lat, lon);
+        coordinate = new Coordinate(latitude, longitude);
 
         boolean groundspeak_cache = false;
-        for (final Element e : wpt.getChildren()) {
-            if (e.is("name")) {
-                code = e.getUnescapedBody();
-            } else if (e.is("urlname")) {
-                urlName = e.getUnescapedBody();
-            } else if (e.is("groundspeak:cache")) {
+        for (final Element element : waypointElement.getChildren()) {
+            if (element.is("name")) {
+                code = element.getUnescapedBody();
+            } else if (element.is("urlname")) {
+                urlName = element.getUnescapedBody();
+            } else if (element.is("groundspeak:cache")) {
                 groundspeak_cache = true;
 
-                for (final XMLAttribute a : e.getAttributes()) {
-                    if (a.is("id")) {
+                for (final XmlAttribute attribute : element.getAttributes()) {
+                    if (attribute.is("id")) {
                         try {
-                            id = Integer.valueOf(a.getValue());
-                        } catch (Exception ex) {
+                            id = Integer.valueOf(attribute.getValue());
+                        } catch (Exception ignored) {
                         }
                     }
-                    if (a.is("archived")) {
-                        archived = Boolean.valueOf(a.getValue());
-                    } else if (a.is("available")) {
-                        available = Boolean.valueOf(a.getValue());
+                    if (attribute.is("archived")) {
+                        archived = Boolean.valueOf(attribute.getValue());
+                    } else if (attribute.is("available")) {
+                        available = Boolean.valueOf(attribute.getValue());
                     }
                 }
 
-                for (final Element ee : e.getChildren()) {
-                    if (ee.is("groundspeak:name")) {
-                        cacheName = ee.getUnescapedBody();
-                    } else if (ee.is("groundspeak:difficulty")) {
-                        difficulty = ee.getBodyD();
-                    } else if (ee.is("groundspeak:terrain")) {
-                        terrain = ee.getBodyD();
-                    } else if (ee.is("groundspeak:type")) {
-                        type = ee.getUnescapedBody();
-                    } else if (ee.is("groundspeak:owner")) {
-                        owner = ee.getUnescapedBody();
-                    } else if (ee.is("groundspeak:container")) {
-                        container = ee.getUnescapedBody();
-                    } else if (ee.is("groundspeak:long_description")) {
-                        listing = ee.getUnescapedBody();
-                    } else if (ee.is("groundspeak:short_description")) {
-                        listingShort = ee.getUnescapedBody();
-                    } else if (ee.is("groundspeak:encoded_hints")) {
-                        hint = ee.getUnescapedBody();
-                    } else if (ee.is("groundspeak:logs")) {
-                        for (final Element eee : ee.getChildren())
-                            if (eee.is("groundspeak:log")) {
-                                // skip geotoad info log
-                                if (eee.attrIs("id", "-2")) {
+                for (final Element groundspeakElement : element.getChildren()) {
+                    if (groundspeakElement.is("groundspeak:name")) {
+                        cacheName = groundspeakElement.getUnescapedBody();
+                    } else if (groundspeakElement.is("groundspeak:difficulty")) {
+                        difficulty = groundspeakElement.getBodyDouble();
+                    } else if (groundspeakElement.is("groundspeak:terrain")) {
+                        terrain = groundspeakElement.getBodyDouble();
+                    } else if (groundspeakElement.is("groundspeak:type")) {
+                        type = groundspeakElement.getUnescapedBody();
+                    } else if (groundspeakElement.is("groundspeak:owner")) {
+                        owner = groundspeakElement.getUnescapedBody();
+                    } else if (groundspeakElement.is("groundspeak:container")) {
+                        container = groundspeakElement.getUnescapedBody();
+                    } else if (groundspeakElement.is("groundspeak:long_description")) {
+                        listing = groundspeakElement.getUnescapedBody();
+                    } else if (groundspeakElement.is("groundspeak:short_description")) {
+                        listingShort = groundspeakElement.getUnescapedBody();
+                    } else if (groundspeakElement.is("groundspeak:encoded_hints")) {
+                        hint = groundspeakElement.getUnescapedBody();
+                    } else if (groundspeakElement.is("groundspeak:logs")) {
+                        for (final Element logElement : groundspeakElement.getChildren())
+                            if (logElement.is("groundspeak:log")) {
+                                // Skip geotoad info log.
+                                if (logElement.attrIs("id", "-2")) {
                                     continue;
                                 }
 
-                                String ltype = null;
+                                String logType = null;
                                 String author = null;
                                 String text = null;
                                 String date = null;
 
-                                for (final Element eeee : eee.getChildren()) {
-                                    if (eeee.is("groundspeak:date")) {
-                                        date = eeee.getUnescapedBody();
-                                    } else if (eeee.is("groundspeak:type")) {
-                                        ltype = eeee.getUnescapedBody();
-                                    } else if (eeee.is("groundspeak:finder")) {
-                                        author = eeee.getUnescapedBody();
-                                    } else if (eeee.is("groundspeak:text")) {
-                                        text = eeee.getUnescapedBody();
+                                for (final Element logChildren : logElement.getChildren()) {
+                                    if (logChildren.is("groundspeak:date")) {
+                                        date = logChildren.getUnescapedBody();
+                                    } else if (logChildren.is("groundspeak:type")) {
+                                        logType = logChildren.getUnescapedBody();
+                                    } else if (logChildren.is("groundspeak:finder")) {
+                                        author = logChildren.getUnescapedBody();
+                                    } else if (logChildren.is("groundspeak:text")) {
+                                        text = logChildren.getUnescapedBody();
                                     }
                                 }
 
-                                if (ltype != null && ltype.equals("Other")) {
+                                if (logType != null && logType.equals("Other")) {
                                     continue;
                                 }
 
                                 try {
-                                    final GeocacheLog gl =
-                                            new GeocacheLog(ltype, author, text, date);
-                                    logs.add(gl);
+                                    final GeocacheLog log =
+                                            new GeocacheLog(logType, author, text, date);
+                                    logs.add(log);
                                 } catch (NullPointerException | IllegalArgumentException ex) {
                                     ExceptionPanel.display(ex);
                                 }
                             }
-                    } else if (ee.is("groundspeak:attributes")) {
-                        for (final Element eee : ee.getChildren()) {
-                            if (eee.is("groundspeak:attribute")) {
-                                Integer ID = null;
-                                Integer inc = null;
-                                String desc = null;
+                    } else if (groundspeakElement.is("groundspeak:attributes")) {
+                        for (final Element attributeElement : groundspeakElement.getChildren()) {
+                            if (attributeElement.is("groundspeak:attribute")) {
+                                Integer attributeId = null;
+                                Integer attributeInc = null;
+                                String description = null;
 
-                                for (final XMLAttribute a : eee.getAttributes()) {
-                                    if (a.is("id")) {
-                                        ID = a.getValueI();
-                                    } else if (a.is("inc")) {
-                                        inc = a.getValueI();
+                                for (final XmlAttribute attributeAttribute :
+                                        attributeElement.getAttributes()) {
+                                    if (attributeAttribute.is("id")) {
+                                        attributeId = attributeAttribute.getValueInteger();
+                                    } else if (attributeAttribute.is("inc")) {
+                                        attributeInc = attributeAttribute.getValueInteger();
                                     }
                                 }
-                                desc = eee.getUnescapedBody();
+                                description = attributeElement.getUnescapedBody();
 
                                 try {
-                                    final GeocacheAttribute attr =
-                                            new GeocacheAttribute(ID, inc, desc);
-                                    attributes.add(attr);
+                                    final GeocacheAttribute attribute =
+                                            new GeocacheAttribute(
+                                                    attributeId, attributeInc, description);
+                                    attributes.add(attribute);
                                 } catch (NullPointerException | IllegalArgumentException ex) {
                                     ExceptionPanel.display(ex);
                                 }
@@ -270,12 +273,12 @@ public class GPX {
                         }
                     }
                 }
-            } else if (e.is("gsak:wptExtension")) {
-                for (final Element ee : e.getChildren()) {
-                    if (ee.is("gsak:IsPremium")) {
-                        gcPremium = ee.getBodyB();
-                    } else if (ee.is("gsak:FavPoints")) {
-                        favPoints = ee.getBodyI();
+            } else if (element.is("gsak:wptExtension")) {
+                for (final Element extensionElement : element.getChildren()) {
+                    if (extensionElement.is("gsak:IsPremium")) {
+                        gcPremium = extensionElement.getBodyBoolean();
+                    } else if (extensionElement.is("gsak:FavPoints")) {
+                        favoritePoints = extensionElement.getBodyInteger();
                     }
                 }
             }
@@ -289,7 +292,7 @@ public class GPX {
             container = null;
         }
 
-        final Geocache g =
+        final Geocache geocache =
                 new Geocache(
                         code,
                         cacheName != null ? cacheName : urlName,
@@ -297,38 +300,38 @@ public class GPX {
                         difficulty,
                         terrain,
                         type);
-        g.setOwner(owner);
-        g.setContainer(container);
-        g.setListing(listing);
-        g.setListing_short(listingShort);
-        g.setHint(hint);
-        g.setId(id);
-        g.setArchived(archived);
-        g.setAvailable(available);
-        g.setGcPremium(gcPremium);
-        g.setFavPoints(favPoints);
-        g.addWaypoints(attributes);
-        g.add(logs);
+        geocache.setOwner(owner);
+        geocache.setContainer(container);
+        geocache.setListing(listing);
+        geocache.setListingShort(listingShort);
+        geocache.setHint(hint);
+        geocache.setId(id);
+        geocache.setArchived(archived);
+        geocache.setAvailable(available);
+        geocache.setGcPremium(gcPremium);
+        geocache.setFavoritePoints(favoritePoints);
+        geocache.addAttributes(attributes);
+        geocache.addLogs(logs);
 
-        return g;
+        return geocache;
     }
 
-    public static void saveToFile(ArrayList<Geocache> list, String listName, String pathToGPX)
+    public static void saveToFile(List<Geocache> list, String listName, String pathToGpx)
             throws Throwable {
-        OutputStream os = FileHelper.openFileWrite(pathToGPX);
-        ZipOutputStream zos = new ZipOutputStream(os);
-        zos.setLevel(7);
+        OutputStream outputStream = FileHelper.openFileWrite(pathToGpx);
+        ZipOutputStream zipOutputStream = new ZipOutputStream(outputStream);
+        zipOutputStream.setLevel(7);
 
         if (FileHelper.getFileExtension(listName).equals("zip")) {
             listName = listName.substring(0, listName.length() - 4);
         }
 
-        Integer subListNumber = 0;
+        int subListNumber = 0;
         int baseIndex = 0;
         final int CACHES_PER_GPX = 1000;
         final boolean useSingleFile = list.size() <= CACHES_PER_GPX;
         do {
-            final ArrayList<Geocache> subList = new ArrayList<>();
+            final List<Geocache> subList = new ArrayList<>(CACHES_PER_GPX);
 
             for (int index = 0;
                     index < CACHES_PER_GPX && index + baseIndex < list.size();
@@ -338,36 +341,35 @@ public class GPX {
             baseIndex += CACHES_PER_GPX;
             subListNumber += 1;
 
-            String subListFileName =
-                    useSingleFile ? listName : listName + "-" + subListNumber.toString();
-            subListFileName += ".gpx";
-            zos.putNextEntry(new ZipEntry(subListFileName));
+            final String subListFileName =
+                    useSingleFile ? listName : listName + "-" + subListNumber + ".gpx";
+            zipOutputStream.putNextEntry(new ZipEntry(subListFileName));
 
-            final Element root = cachlistToXML(subList, listName);
-            Parser.xmlToBuffer(root, zos);
+            final Element root = cacheListToXml(subList, listName);
+            Parser.xmlToBuffer(root, zipOutputStream);
 
-            zos.closeEntry();
+            zipOutputStream.closeEntry();
         } while (baseIndex < list.size());
 
-        zos.close();
-        os.close();
+        zipOutputStream.close();
+        outputStream.close();
     }
 
-    private static Element cachlistToXML(final ArrayList<Geocache> list, String name) {
+    private static Element cacheListToXml(final List<Geocache> list, String name) {
         final Element root = new Element();
 
         final Element gpx = new Element("gpx");
-        gpx.add(new XMLAttribute("version", "1.0"));
-        gpx.add(new XMLAttribute("creator", Constants.APP_NAME));
+        gpx.add(new XmlAttribute("version", "1.0"));
+        gpx.add(new XmlAttribute("creator", Constants.APP_NAME));
         gpx.add(
-                new XMLAttribute(
+                new XmlAttribute(
                         "xsi:schemaLocation",
                         "http://www.topografix.com/GPX/1/0 http://www.topografix.com/GPX/1/0/gpx.xsd http://www.groundspeak.com/cache/1/0/1 http://www.groundspeak.com/cache/1/0/1/cache.xsd http://www.gsak.net/xmlv1/6 http://www.gsak.net/xmlv1/6/gsak.xsd"));
-        gpx.add(new XMLAttribute("xmlns", "http://www.topografix.com/GPX/1/0"));
-        gpx.add(new XMLAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance"));
-        gpx.add(new XMLAttribute("xmlns:groundspeak", "http://www.groundspeak.com/cache/1/0/1"));
-        gpx.add(new XMLAttribute("xmlns:gsak", "http://www.gsak.net/xmlv1/6"));
-        gpx.add(new XMLAttribute("xmlns:cgeo", "http://www.cgeo.org/wptext/1/0"));
+        gpx.add(new XmlAttribute("xmlns", "http://www.topografix.com/GPX/1/0"));
+        gpx.add(new XmlAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance"));
+        gpx.add(new XmlAttribute("xmlns:groundspeak", "http://www.groundspeak.com/cache/1/0/1"));
+        gpx.add(new XmlAttribute("xmlns:gsak", "http://www.gsak.net/xmlv1/6"));
+        gpx.add(new XmlAttribute("xmlns:cgeo", "http://www.cgeo.org/wptext/1/0"));
         root.add(gpx);
 
         gpx.add(new Element("name", name));
@@ -380,93 +382,94 @@ public class GPX {
                                 + Version.VERSION));
         gpx.add(new Element("author", Constants.APP_NAME));
 
-        final DateTime dt = new DateTime();
-        final DateTimeFormatter fmt = ISODateTimeFormat.dateTime();
-        final String strDate = fmt.print(dt);
-        gpx.add(new Element("time", strDate));
+        final DateTime ddateTime = new DateTime();
+        final DateTimeFormatter formatter = ISODateTimeFormat.dateTime();
+        final String dateString = formatter.print(ddateTime);
+        gpx.add(new Element("time", dateString));
 
-        for (final Geocache g : list) {
-            gpx.add(cacheToXML(g));
-            for (Waypoint w : g.getWaypoints()) {
-                gpx.add(waypointToXML(w));
+        for (final Geocache geocache : list) {
+            gpx.add(cacheToXml(geocache));
+            for (Waypoint waypoint : geocache.getWaypoints()) {
+                gpx.add(waypointToXml(waypoint));
             }
         }
 
         return root;
     }
 
-    private static Element waypointToXML(Waypoint w) {
-        final Element wpt = new Element("wpt");
-        wpt.add(new XMLAttribute("lat", w.getCoordinate().getLat()));
-        wpt.add(new XMLAttribute("lon", w.getCoordinate().getLon()));
+    private static Element waypointToXml(Waypoint waypoint) {
+        final Element waypointElement = new Element("wpt");
+        waypointElement.add(new XmlAttribute("lat", waypoint.getCoordinate().getLatitude()));
+        waypointElement.add(new XmlAttribute("lon", waypoint.getCoordinate().getLongitude()));
 
-        wpt.add(new Element("time", w.getDateStrISO8601()));
-        wpt.add(new Element("name", w.getCode()));
-        wpt.add(new Element("desc", w.getDescription()));
-        wpt.add(new Element("sym", w.getSymbol()));
-        wpt.add(new Element("type", w.getType()));
+        waypointElement.add(new Element("time", waypoint.getDateStrIso8601()));
+        waypointElement.add(new Element("name", waypoint.getCode()));
+        waypointElement.add(new Element("desc", waypoint.getDescription()));
+        waypointElement.add(new Element("sym", waypoint.getSymbol()));
+        waypointElement.add(new Element("type", waypoint.getType()));
 
         final Element gsakExtension = new Element("gsak:wptExtension");
-        wpt.add(gsakExtension);
-        gsakExtension.add(new Element("gsak:Parent", w.getParent()));
+        waypointElement.add(gsakExtension);
+        gsakExtension.add(new Element("gsak:Parent", waypoint.getParent()));
 
-        return wpt;
+        return waypointElement;
     }
 
-    private static Element cacheToXML(Geocache g) {
-        final Element wpt = new Element("wpt");
-        wpt.add(new XMLAttribute("lat", g.getCoordinate().getLat()));
-        wpt.add(new XMLAttribute("lon", g.getCoordinate().getLon()));
+    private static Element cacheToXml(Geocache geocache) {
+        final Element waypoint = new Element("wpt");
+        waypoint.add(new XmlAttribute("lat", geocache.getCoordinate().getLatitude()));
+        waypoint.add(new XmlAttribute("lon", geocache.getCoordinate().getLongitude()));
 
-        wpt.add(new Element("name", g.getCode()));
-        wpt.add(new Element("urlname", g.getName()));
+        waypoint.add(new Element("name", geocache.getCode()));
+        waypoint.add(new Element("urlname", geocache.getName()));
 
-        final Element gspkCache = new Element("groundspeak:cache");
-        gspkCache.add(new XMLAttribute("id", g.getId()));
-        gspkCache.add(new XMLAttribute("available", g.getAvailable()));
-        gspkCache.add(new XMLAttribute("archived", g.getArchived()));
-        wpt.add(gspkCache);
+        final Element groundspeakCache = new Element("groundspeak:cache");
+        groundspeakCache.add(new XmlAttribute("id", geocache.getId()));
+        groundspeakCache.add(new XmlAttribute("available", geocache.isAvailable()));
+        groundspeakCache.add(new XmlAttribute("archived", geocache.isArchived()));
+        waypoint.add(groundspeakCache);
 
-        final Element gspkAttrs = new Element("groundspeak:attributes");
-        gspkCache.add(gspkAttrs);
-        for (GeocacheAttribute attr : g.getAttributes()) {
-            final Element gspkAttr = new Element("groundspeak:attribute");
-            gspkAttr.add(new XMLAttribute("id", attr.getID()));
-            gspkAttr.add(new XMLAttribute("inc", attr.getInc()));
-            gspkAttr.setBody(attr.getDesc());
-            gspkAttrs.add(gspkAttr);
+        final Element groundspeakAttributes = new Element("groundspeak:attributes");
+        groundspeakCache.add(groundspeakAttributes);
+        for (GeocacheAttribute attribute : geocache.getAttributes()) {
+            final Element groundspeakAttribute = new Element("groundspeak:attribute");
+            groundspeakAttribute.add(new XmlAttribute("id", attribute.getId()));
+            groundspeakAttribute.add(new XmlAttribute("inc", attribute.getInc()));
+            groundspeakAttribute.setBody(attribute.getDescription());
+            groundspeakAttributes.add(groundspeakAttribute);
         }
 
-        gspkCache.add(new Element("groundspeak:name", g.getName()));
-        gspkCache.add(new Element("groundspeak:difficulty", g.getDifficulty()));
-        gspkCache.add(new Element("groundspeak:terrain", g.getTerrain()));
-        gspkCache.add(new Element("groundspeak:type", g.getType().asGCType()));
-        gspkCache.add(new Element("groundspeak:owner", g.getOwner()));
-        gspkCache.add(new Element("groundspeak:container", g.getContainer().asGC()));
-        gspkCache.add(new Element("groundspeak:long_description", g.getListing()));
-        gspkCache.add(new Element("groundspeak:short_description", g.getListing_short()));
-        gspkCache.add(new Element("groundspeak:encoded_hints", g.getHint()));
+        groundspeakCache.add(new Element("groundspeak:name", geocache.getName()));
+        groundspeakCache.add(new Element("groundspeak:difficulty", geocache.getDifficulty()));
+        groundspeakCache.add(new Element("groundspeak:terrain", geocache.getTerrain()));
+        groundspeakCache.add(new Element("groundspeak:type", geocache.getType().asGcType()));
+        groundspeakCache.add(new Element("groundspeak:owner", geocache.getOwner()));
+        groundspeakCache.add(new Element("groundspeak:container", geocache.getContainer().asGc()));
+        groundspeakCache.add(new Element("groundspeak:long_description", geocache.getListing()));
+        groundspeakCache.add(
+                new Element("groundspeak:short_description", geocache.getListingShort()));
+        groundspeakCache.add(new Element("groundspeak:encoded_hints", geocache.getHint()));
 
-        if (g.getLogs().size() > 0) {
-            final Element gspkLogs = new Element("groundspeak:logs");
-            gspkCache.add(gspkLogs);
+        if (geocache.getLogs().size() > 0) {
+            final Element groundspeakLogs = new Element("groundspeak:logs");
+            groundspeakCache.add(groundspeakLogs);
 
-            for (final GeocacheLog log : g.getLogs()) {
-                final Element gspkLog = new Element("groundspeak:log");
-                gspkLogs.add(gspkLog);
+            for (final GeocacheLog log : geocache.getLogs()) {
+                final Element groundspeakLog = new Element("groundspeak:log");
+                groundspeakLogs.add(groundspeakLog);
 
-                gspkLog.add(new Element("groundspeak:date", log.getDateStrISO8601()));
-                gspkLog.add(new Element("groundspeak:type", log.getTypeStr()));
-                gspkLog.add(new Element("groundspeak:finder", log.getAuthor()));
-                gspkLog.add(new Element("groundspeak:text", log.getText()));
+                groundspeakLog.add(new Element("groundspeak:date", log.getDateStrIso8601()));
+                groundspeakLog.add(new Element("groundspeak:type", log.getTypeStr()));
+                groundspeakLog.add(new Element("groundspeak:finder", log.getAuthor()));
+                groundspeakLog.add(new Element("groundspeak:text", log.getText()));
             }
         }
 
         final Element gsakExtension = new Element("gsak:wptExtension");
-        gsakExtension.add(new Element("gsak:IsPremium", g.getGcPremium()));
-        gsakExtension.add(new Element("gsak:FavPoints", g.getFavPoints()));
-        wpt.add(gsakExtension);
+        gsakExtension.add(new Element("gsak:IsPremium", geocache.isGcPremium()));
+        gsakExtension.add(new Element("gsak:FavPoints", geocache.getFavoritePoints()));
+        waypoint.add(gsakExtension);
 
-        return wpt;
+        return waypoint;
     }
 }

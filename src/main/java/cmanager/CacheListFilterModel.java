@@ -2,6 +2,7 @@ package cmanager;
 
 import cmanager.geo.Geocache;
 import java.util.ArrayList;
+import java.util.List;
 
 public abstract class CacheListFilterModel extends CacheListFilterPanel {
 
@@ -11,59 +12,60 @@ public abstract class CacheListFilterModel extends CacheListFilterPanel {
         super(filterType);
     }
 
-    public ArrayList<Geocache> getFiltered(final ArrayList<Geocache> originalList) {
+    public List<Geocache> getFiltered(final List<Geocache> originalList) {
         final int listSize = originalList.size();
-        ThreadStore ts = new ThreadStore();
-        final int cores = ts.getCores(listSize);
+        ThreadStore threadStore = new ThreadStore();
+        final int cores = threadStore.getCores(listSize);
         final int perProcess = listSize / cores;
 
-        final ArrayList<ArrayList<Geocache>> lists = new ArrayList<>(5);
-        for (int c = 0; c < cores; c++) {
-            lists.add(new ArrayList<Geocache>());
+        final List<List<Geocache>> lists = new ArrayList<>(5);
+        for (int core = 0; core < cores; core++) {
+            lists.add(new ArrayList<>());
         }
-        for (int c = 0; c < cores; c++) {
-            final int start = perProcess * c;
-            final int c_final = c;
+        for (int core = 0; core < cores; core++) {
+            final int start = perProcess * core;
+            final int coreFinal = core;
 
-            int tmp = perProcess * (c + 1) < listSize ? perProcess * (c + 1) : listSize;
-            if (c == cores - 1) {
-                tmp = listSize;
+            int temp = Math.min(perProcess * (core + 1), listSize);
+            if (core == cores - 1) {
+                temp = listSize;
             }
-            final int end = tmp;
+            final int end = temp;
 
-            ts.addAndRun(
+            threadStore.addAndRun(
                     new Thread(
                             new Runnable() {
                                 public void run() {
-                                    ArrayList<Geocache> list = lists.get(c_final);
+                                    final List<Geocache> list = lists.get(coreFinal);
                                     try {
                                         for (int i = start; i < end; i++) {
-                                            final Geocache g = originalList.get(i);
-                                            if ((!inverted && isGood(g))
-                                                    || (inverted && !isGood(g))) {
-                                                list.add(g);
+                                            final Geocache geocache = originalList.get(i);
+                                            if ((!inverted && isGood(geocache))
+                                                    || (inverted && !isGood(geocache))) {
+                                                list.add(geocache);
                                             }
                                         }
-                                    } catch (Throwable ex) {
-                                        Thread t = Thread.currentThread();
-                                        t.getUncaughtExceptionHandler().uncaughtException(t, ex);
+                                    } catch (Throwable ethrowable) {
+                                        Thread thread = Thread.currentThread();
+                                        thread.getUncaughtExceptionHandler()
+                                                .uncaughtException(thread, ethrowable);
                                     }
                                 }
                             }));
         }
         try {
-            ts.joinAndThrow();
-        } catch (Throwable e) {
-            e.printStackTrace();
+            threadStore.joinAndThrow();
+        } catch (Throwable throwable) {
+            throwable.printStackTrace();
         }
 
-        final ArrayList<Geocache> list_final = new ArrayList<>();
-        for (final ArrayList<Geocache> list : lists) {
-            list_final.addAll(list);
+        final List<Geocache> listAll = new ArrayList<>();
+        for (final List<Geocache> list : lists) {
+            listAll.addAll(list);
         }
 
-        return list_final;
+        return listAll;
     }
 
-    protected abstract boolean isGood(Geocache g);
+    protected abstract boolean isGood(Geocache geocache);
 }

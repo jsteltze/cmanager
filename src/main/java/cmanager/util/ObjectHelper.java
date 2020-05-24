@@ -13,28 +13,28 @@ public class ObjectHelper {
         T result = null;
 
         try {
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            ObjectOutputStream oos = new ObjectOutputStream(bos);
-            oos.writeObject(o);
-            oos.flush();
-            oos.close();
-            bos.close();
-            final byte[] byteData = bos.toByteArray();
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);
+            objectOutputStream.writeObject(o);
+            objectOutputStream.flush();
+            objectOutputStream.close();
+            byteArrayOutputStream.close();
+            final byte[] byteData = byteArrayOutputStream.toByteArray();
 
-            ByteArrayInputStream bais = new ByteArrayInputStream(byteData);
-            result = (T) new ObjectInputStream(bais).readObject();
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
+            ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(byteData);
+            result = (T) new ObjectInputStream(byteArrayInputStream).readObject();
+        } catch (IOException | ClassNotFoundException exception) {
+            exception.printStackTrace();
         }
 
         return result;
     }
 
-    static boolean areEqual(Object o1, Object o2) {
-        return !(o1 == null || o2 == null || !o1.equals(o2));
+    static boolean areEqual(Object object1, Object object2) {
+        return !(object1 == null || !object1.equals(object2));
     }
 
-    public static <T> T getBest(T o1, T o2) {
-        return areEqual(o1, o2) ? o1 : o2;
+    public static <T> T getBest(T object1, T object2) {
+        return areEqual(object1, object2) ? object1 : object2;
     }
 }

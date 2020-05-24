@@ -19,8 +19,7 @@ public class ForkUtil {
         final File jarFile =
                 new java.io.File(
                         Main.class.getProtectionDomain().getCodeSource().getLocation().getPath());
-        final String jarPath = jarFile.getAbsolutePath();
-        return jarPath;
+        return jarFile.getAbsolutePath();
     }
 
     private static void showInvalidJarPathMessage(String jarPath) {
@@ -46,18 +45,18 @@ public class ForkUtil {
     }
 
     public static void forkWithRezeidHeapAndExit(String[] args) throws IOException {
-        for (int i = 0; i < args.length; i++) {
-            if (args[i].equals(PARAM_HEAP_RESIZED)) {
+        for (final String arg : args) {
+            if (arg.equals(PARAM_HEAP_RESIZED)) {
                 return;
             }
         }
 
         // Read settings
-        final String heapSizeS = Settings.getS(Settings.Key.HEAP_SIZE);
+        final String heapSizeS = Settings.getString(Settings.Key.HEAP_SIZE);
         Integer heapSizeI = null;
         try {
             heapSizeI = Integer.valueOf(heapSizeS);
-        } catch (Throwable t) {
+        } catch (Throwable ignored) {
         }
 
         if (heapSizeI == null || heapSizeI < 128) {
@@ -87,7 +86,7 @@ public class ForkUtil {
         int retval = -1;
         try {
             retval = p.waitFor();
-        } catch (InterruptedException e) {
+        } catch (InterruptedException ignored) {
         }
 
         if (retval == 0) {

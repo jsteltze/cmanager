@@ -8,6 +8,11 @@ public class Compatibility {
     // Java 10 deprecated the old method.
     public static int SHORTCUT_KEY_MASK = determineShortcutKeyMask();
 
+    /**
+     * Determine the shortcut for the key mask.
+     *
+     * @return The shortcut for the key mask.
+     */
     private static int determineShortcutKeyMask() {
         final int javaVersion = Compatibility.getJavaVersionMain();
         if (javaVersion >= 10) {
@@ -22,6 +27,11 @@ public class Compatibility {
         return Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
     }
 
+    /**
+     * Get the main Java version this application is currently running on.
+     *
+     * @return The Java version this is currently running on or -1 if there is an error.
+     */
     private static int getJavaVersionMain() {
         final String[] parts = System.getProperty("java.version").split("\\.");
 

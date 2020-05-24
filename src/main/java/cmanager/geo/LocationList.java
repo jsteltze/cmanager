@@ -3,6 +3,7 @@ package cmanager.geo;
 import cmanager.settings.Settings;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 public class LocationList {
 
@@ -15,7 +16,7 @@ public class LocationList {
         return theList;
     }
 
-    private ArrayList<Location> locations = null;
+    private List<Location> locations = null;
 
     private LocationList() {}
 
@@ -23,15 +24,15 @@ public class LocationList {
         locations = Settings.getSerialized(Settings.Key.LOCATION_LIST);
     }
 
-    public ArrayList<Location> getLocations() {
+    public List<Location> getLocations() {
         if (locations == null) {
             try {
                 load();
-            } catch (ClassNotFoundException | IOException e) {
+            } catch (ClassNotFoundException | IOException ignored) {
             }
         }
 
-        // loading failed
+        // Loading failed.
         if (locations == null) {
             locations = new ArrayList<>();
         }

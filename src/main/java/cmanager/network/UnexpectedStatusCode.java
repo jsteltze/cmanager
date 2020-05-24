@@ -4,8 +4,8 @@ public class UnexpectedStatusCode extends Exception {
 
     private static final long serialVersionUID = -1132973286480626832L;
 
-    private int statusCode;
-    private String body;
+    private final int statusCode;
+    private final String body;
 
     public UnexpectedStatusCode(int statusCode, String body) {
         super("Unexpected status code " + Integer.valueOf(statusCode).toString());

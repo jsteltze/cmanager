@@ -2,23 +2,24 @@ package cmanager;
 
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.ArrayList;
+import java.util.List;
 
 public class ThreadStore implements UncaughtExceptionHandler {
 
-    private final ArrayList<Thread> threads = new ArrayList<>();
+    private final List<Thread> threads = new ArrayList<>();
     private Throwable exception = null;
 
-    public void addAndRun(Thread t) {
-        t.setUncaughtExceptionHandler(this);
-        threads.add(t);
-        t.start();
+    public void addAndRun(Thread thread) {
+        thread.setUncaughtExceptionHandler(this);
+        threads.add(thread);
+        thread.start();
     }
 
     public void joinAndThrow() throws Throwable {
-        for (Thread t : threads)
+        for (Thread thread : threads)
             try {
-                t.join();
-            } catch (InterruptedException e1) {
+                thread.join();
+            } catch (InterruptedException ignored) {
             }
 
         if (exception != null) {
@@ -27,8 +28,8 @@ public class ThreadStore implements UncaughtExceptionHandler {
     }
 
     @Override
-    public void uncaughtException(Thread t, Throwable e) {
-        exception = e;
+    public void uncaughtException(Thread thread, Throwable throwable) {
+        exception = throwable;
     }
 
     public int getCores(int maximum) {

@@ -11,8 +11,10 @@ import cmanager.util.DesktopUtil;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
+import java.awt.event.ActionEvent;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.awt.event.MouseEvent;
 import javax.swing.JLabel;
 import javax.swing.JViewport;
 
@@ -20,37 +22,40 @@ public class CachePanel extends javax.swing.JPanel {
 
     private static final long serialVersionUID = -4848832298041708795L;
 
-    private Geocache g = null;
+    private Geocache geocache = null;
 
-    public void setCache(Geocache g_in) {
-        setCache(g_in, true);
+    public void setCache(Geocache geocache) {
+        setCache(geocache, true);
     }
 
-    public void setCache(Geocache g_in, boolean showLogs) {
-        g = g_in;
+    public void setCache(Geocache geocache, boolean showLogs) {
+        this.geocache = geocache;
 
-        if (g == null) {
+        if (this.geocache == null) {
             panelListing.setVisible(false);
         } else {
-            final String coords = g.getCoordinate() != null ? g.getCoordinate().toString() : null;
-            lblCoordinates.setText(coords);
+            final String coordinates =
+                    this.geocache.getCoordinate() != null
+                            ? this.geocache.getCoordinate().toString()
+                            : null;
+            lblCoordinates.setText(coordinates);
 
-            lblStatus.setText(g.statusAsString());
-            lblName.setText(g.getName());
-            lblCode.setText(g.getCode());
-            lblOwner.setText(g.getOwner());
-            lblType.setText(g.getType().asNiceType());
-            lblDifficulty.setText(g.getDifficulty().toString());
-            lblTerrain.setText(g.getTerrain().toString());
-            lblContainer.setText(g.getContainer().asGC());
+            lblStatus.setText(this.geocache.getStatusAsString());
+            labelName.setText(this.geocache.getName());
+            lblCode.setText(this.geocache.getCode());
+            lblOwner.setText(this.geocache.getOwner());
+            lblType.setText(this.geocache.getType().asNiceType());
+            lblDifficulty.setText(this.geocache.getDifficulty().toString());
+            lblTerrain.setText(this.geocache.getTerrain().toString());
+            lblContainer.setText(this.geocache.getContainer().asGc());
 
-            String listing = g.getListing_short();
+            String listing = this.geocache.getListingShort();
             if (listing != null && !listing.equals("")) {
                 listing += "<br><br>";
             } else {
                 listing = "";
             }
-            listing = "<html>" + listing + g.getListing() + "</html>";
+            listing = "<html>" + listing + this.geocache.getListing() + "</html>";
 
             editorListing.setContentType("text/html");
             editorListing.setText(listing);
@@ -64,8 +69,8 @@ public class CachePanel extends javax.swing.JPanel {
                 gbc.weightx = 1;
                 gbc.weighty = 1;
                 gbc.anchor = GridBagConstraints.WEST;
-                gbc.fill = java.awt.GridBagConstraints.BOTH;
-                for (final GeocacheLog log : g.getLogs()) {
+                gbc.fill = GridBagConstraints.BOTH;
+                for (final GeocacheLog log : this.geocache.getLogs()) {
                     panelLogs.add(new LogPanel(log), gbc);
                     gbc.gridy++;
                 }
@@ -78,24 +83,26 @@ public class CachePanel extends javax.swing.JPanel {
         }
     }
 
-    public void colorize(Geocache g2) {
-        if (g.getCoordinate() != null) {
-            colorize(lblCoordinates, g.getCoordinate().equals(g2.getCoordinate()));
+    public void colorize(Geocache geocache2) {
+        if (geocache.getCoordinate() != null) {
+            colorize(lblCoordinates, geocache.getCoordinate().equals(geocache2.getCoordinate()));
         }
-        if (g.statusAsString() != null) {
-            colorize(lblStatus, g.statusAsString().equals(g2.statusAsString()));
+        if (geocache.getStatusAsString() != null) {
+            colorize(lblStatus, geocache.getStatusAsString().equals(geocache2.getStatusAsString()));
         }
-        if (g.getName() != null) {
-            colorize(lblName, g.getName().equals(g2.getName()));
+        if (geocache.getName() != null) {
+            colorize(labelName, geocache.getName().equals(geocache2.getName()));
         }
-        if (g.getOwner() != null) {
-            colorize(lblOwner, g.getOwner().equals(g2.getOwner()));
+        if (geocache.getOwner() != null) {
+            colorize(lblOwner, geocache.getOwner().equals(geocache2.getOwner()));
         }
 
-        colorize(lblType, g.getType().equals(g2.getType()));
-        colorize(lblDifficulty, Double.compare(g.getDifficulty(), g2.getDifficulty()) == 0);
-        colorize(lblTerrain, Double.compare(g.getTerrain(), g2.getTerrain()) == 0);
-        colorize(lblContainer, g.getContainer().equals(g2.getContainer()));
+        colorize(lblType, geocache.getType().equals(geocache2.getType()));
+        colorize(
+                lblDifficulty,
+                Double.compare(geocache.getDifficulty(), geocache2.getDifficulty()) == 0);
+        colorize(lblTerrain, Double.compare(geocache.getTerrain(), geocache2.getTerrain()) == 0);
+        colorize(lblContainer, geocache.getContainer().equals(geocache2.getContainer()));
     }
 
     private void colorize(JLabel label, boolean good) {
@@ -116,17 +123,17 @@ public class CachePanel extends javax.swing.JPanel {
         final int scroll = jScrollPane.getVerticalScrollBar().getWidth() + 20;
         width -= scroll;
 
-        Dimension d = new Dimension(width, panelHeading.getSize().height);
-        panelHeading.setSize(d);
-        panelHeading.setPreferredSize(d);
-        d = lblName.getMinimumSize();
-        d.width += 20;
-        panelHeading.setMinimumSize(d);
+        Dimension dimension = new Dimension(width, panelHeading.getSize().height);
+        panelHeading.setSize(dimension);
+        panelHeading.setPreferredSize(dimension);
+        dimension = labelName.getMinimumSize();
+        dimension.width += 20;
+        panelHeading.setMinimumSize(dimension);
         panelHeading.validate();
 
-        d = new Dimension(width, panelFooter.getSize().height);
-        panelFooter.setSize(d);
-        panelFooter.setPreferredSize(d);
+        dimension = new Dimension(width, panelFooter.getSize().height);
+        panelFooter.setSize(dimension);
+        panelFooter.setPreferredSize(dimension);
         panelFooter.validate();
 
         panelListing.validate();
@@ -140,7 +147,7 @@ public class CachePanel extends javax.swing.JPanel {
         this.addComponentListener(
                 new ComponentAdapter() {
                     @Override
-                    public void componentResized(ComponentEvent ce) {
+                    public void componentResized(ComponentEvent componentEvent) {
                         adjustToOptimalWidth();
                     }
                 });
@@ -148,7 +155,7 @@ public class CachePanel extends javax.swing.JPanel {
         panelListingText.addComponentListener(
                 new ComponentAdapter() {
                     @Override
-                    public void componentResized(ComponentEvent ce) {
+                    public void componentResized(ComponentEvent componentEvent) {
                         jScrollPane.getVerticalScrollBar().setValue(0);
                         jScrollPane.getHorizontalScrollBar().setValue(0);
                     }
@@ -170,7 +177,7 @@ public class CachePanel extends javax.swing.JPanel {
         jScrollPane = new javax.swing.JScrollPane();
         panelListing = new javax.swing.JPanel();
         panelHeading = new javax.swing.JPanel();
-        lblName = new javax.swing.JLabel();
+        labelName = new javax.swing.JLabel();
         lblCode = new javax.swing.JLabel();
         jLabel1 = new javax.swing.JLabel();
         lblType = new javax.swing.JLabel();
@@ -228,11 +235,11 @@ public class CachePanel extends javax.swing.JPanel {
                     }
                 });
 
-        lblName.setBackground(new java.awt.Color(102, 255, 51));
-        lblName.setFont(new java.awt.Font("Dialog", 1, 18)); // NOI18N
-        lblName.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        lblName.setText("lblName");
-        lblName.setName("lblName"); // NOI18N
+        labelName.setBackground(new java.awt.Color(102, 255, 51));
+        labelName.setFont(new java.awt.Font("Dialog", 1, 18)); // NOI18N
+        labelName.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        labelName.setText("lblName");
+        labelName.setName("lblName"); // NOI18N
 
         lblCode.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         lblCode.setText("lblCode");
@@ -275,7 +282,7 @@ public class CachePanel extends javax.swing.JPanel {
                                         .createSequentialGroup()
                                         .addGap(12, 12, 12)
                                         .addComponent(
-                                                lblName,
+                                                labelName,
                                                 javax.swing.GroupLayout.DEFAULT_SIZE,
                                                 javax.swing.GroupLayout.DEFAULT_SIZE,
                                                 Short.MAX_VALUE))
@@ -377,7 +384,7 @@ public class CachePanel extends javax.swing.JPanel {
                                 panelHeadingLayout
                                         .createSequentialGroup()
                                         .addGap(12, 12, 12)
-                                        .addComponent(lblName)
+                                        .addComponent(labelName)
                                         .addGap(6, 6, 6)
                                         .addComponent(lblCode)
                                         .addGap(12, 12, 12)
@@ -600,25 +607,25 @@ public class CachePanel extends javax.swing.JPanel {
     } // </editor-fold>//GEN-END:initComponents
 
     private void formComponentResized(
-            java.awt.event.ComponentEvent evt) { // GEN-FIRST:event_formComponentResized
+            ComponentEvent componentEvent) { // GEN-FIRST:event_formComponentResized
     } // GEN-LAST:event_formComponentResized
 
     private void btnOnlineActionPerformed(
-            java.awt.event.ActionEvent evt) { // GEN-FIRST:event_btnOnlineActionPerformed
-        DesktopUtil.openUrl(g.getURL());
+            ActionEvent actionEvent) { // GEN-FIRST:event_btnOnlineActionPerformed
+        DesktopUtil.openUrl(geocache.getUrl());
     } // GEN-LAST:event_btnOnlineActionPerformed
 
     private void panelHeadingComponentResized(
-            java.awt.event.ComponentEvent evt) { // GEN-FIRST:event_panelHeadingComponentResized
+            ComponentEvent componentEvent) { // GEN-FIRST:event_panelHeadingComponentResized
         jScrollPane.getVerticalScrollBar().setValue(0);
     } // GEN-LAST:event_panelHeadingComponentResized
 
     private void jScrollPaneComponentShown(
-            java.awt.event.ComponentEvent evt) { // GEN-FIRST:event_jScrollPaneComponentShown
+            ComponentEvent componentEvent) { // GEN-FIRST:event_jScrollPaneComponentShown
     } // GEN-LAST:event_jScrollPaneComponentShown
 
     private void panelListingMouseClicked(
-            java.awt.event.MouseEvent evt) { // GEN-FIRST:event_panelListingMouseClicked
+            MouseEvent mouseEvent) { // GEN-FIRST:event_panelListingMouseClicked
     } // GEN-LAST:event_panelListingMouseClicked
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -636,7 +643,7 @@ public class CachePanel extends javax.swing.JPanel {
     private javax.swing.JLabel lblContainer;
     private javax.swing.JLabel lblCoordinates;
     private javax.swing.JLabel lblDifficulty;
-    private javax.swing.JLabel lblName;
+    private javax.swing.JLabel labelName;
     private javax.swing.JLabel lblOwner;
     private javax.swing.JLabel lblStatus;
     private javax.swing.JLabel lblTerrain;

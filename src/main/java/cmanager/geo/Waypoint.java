@@ -10,16 +10,16 @@ public class Waypoint implements Serializable {
 
     private static final long serialVersionUID = 3154357724453317729L;
 
-    private Coordinate coords = null;
-    private String code = null;
-    private String description = null;
-    private String symbol = null;
-    private String type = null;
-    private String parent = null;
-    private DateTime date = null;
+    private Coordinate coordinate;
+    private String code;
+    private String description;
+    private String symbol;
+    private String type;
+    private String parent;
+    private DateTime date;
 
     public Waypoint(
-            Coordinate coords,
+            Coordinate coordinate,
             String code,
             String description,
             String symbol,
@@ -29,29 +29,30 @@ public class Waypoint implements Serializable {
             throw new NullPointerException();
         }
 
-        this.coords = coords;
+        this.coordinate = coordinate;
         this.code = code;
         this.description = description;
         this.symbol = symbol;
         this.type = type;
         this.parent = parent;
+        this.date = null;
     }
 
     public void setDate(String date) {
         this.date = date == null ? null : new DateTime(date, DateTimeZone.UTC);
     }
 
-    public String getDateStrISO8601() {
+    public String getDateStrIso8601() {
         if (date == null) {
             return null;
         }
 
-        final DateTimeFormatter fmt = ISODateTimeFormat.dateTime();
-        return fmt.print(date);
+        final DateTimeFormatter formatter = ISODateTimeFormat.dateTime();
+        return formatter.print(date);
     }
 
     public Coordinate getCoordinate() {
-        return coords;
+        return coordinate;
     }
 
     public String getCode() {

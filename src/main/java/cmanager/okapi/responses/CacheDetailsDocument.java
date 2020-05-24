@@ -1,12 +1,16 @@
 package cmanager.okapi.responses;
 
+import com.google.gson.annotations.SerializedName;
+
 public class CacheDetailsDocument {
 
     private static class Owner {
 
         String uuid;
         String username;
-        String profile_url;
+
+        @SerializedName("profile_url")
+        String profileUrl;
     }
 
     String size2;
@@ -14,7 +18,9 @@ public class CacheDetailsDocument {
     String short_description;
     String description;
     String hint2;
-    Boolean req_passwd;
+
+    @SerializedName("req_password")
+    Boolean requiresPassword;
 
     public String getOwnerUuid() {
         return owner.uuid;
@@ -24,8 +30,8 @@ public class CacheDetailsDocument {
         return owner.username;
     }
 
-    public String getOwnerProfile_url() {
-        return owner.profile_url;
+    public String getOwnerProfileUrl() {
+        return owner.profileUrl;
     }
 
     public String getSize2() {
@@ -49,6 +55,6 @@ public class CacheDetailsDocument {
     }
 
     public Boolean doesRequirePassword() {
-        return req_passwd;
+        return requiresPassword;
     }
 }

@@ -5,50 +5,51 @@ import java.io.IOException;
 
 abstract class BufferWriteAbstraction {
 
-    public abstract BufferWriteAbstraction append(String s) throws IOException;
+    public abstract BufferWriteAbstraction append(String string) throws IOException;
 
     public abstract String toString();
 
-    public BufferWriteAbstraction append(BufferWriteAbstraction bwa) throws IOException {
-        return append(bwa.toString());
+    public BufferWriteAbstraction append(BufferWriteAbstraction bufferWriteAbstraction)
+            throws IOException {
+        return append(bufferWriteAbstraction.toString());
     }
 
-    public static class SB extends BufferWriteAbstraction {
+    public static class StringBufferWriteAbstraction extends BufferWriteAbstraction {
 
-        private StringBuilder sb = null;
+        private StringBuilder stringBuilder = null;
 
         @SuppressWarnings("unused")
-        private SB() {}
+        private StringBufferWriteAbstraction() {}
 
-        public SB(StringBuilder sb) {
-            this.sb = sb;
+        public StringBufferWriteAbstraction(StringBuilder stringBuilder) {
+            this.stringBuilder = stringBuilder;
         }
 
         @Override
-        public BufferWriteAbstraction append(String s) {
-            sb.append(s);
+        public BufferWriteAbstraction append(String string) {
+            stringBuilder.append(string);
             return this;
         }
 
         public String toString() {
-            return sb.toString();
+            return stringBuilder.toString();
         }
     }
 
-    public static class BW extends BufferWriteAbstraction {
+    public static class BufferedWriterWriteAbstraction extends BufferWriteAbstraction {
 
-        private BufferedWriter bw = null;
+        private BufferedWriter bufferedWriter = null;
 
         @SuppressWarnings("unused")
-        private BW() {}
+        private BufferedWriterWriteAbstraction() {}
 
-        public BW(BufferedWriter bw) {
-            this.bw = bw;
+        public BufferedWriterWriteAbstraction(BufferedWriter bufferedWriter) {
+            this.bufferedWriter = bufferedWriter;
         }
 
         @Override
-        public BufferWriteAbstraction append(String s) throws IOException {
-            bw.write(s);
+        public BufferWriteAbstraction append(String string) throws IOException {
+            bufferedWriter.write(string);
             return this;
         }
 
@@ -58,7 +59,7 @@ abstract class BufferWriteAbstraction {
         }
 
         public BufferedWriter getBW() {
-            return bw;
+            return bufferedWriter;
         }
     }
 }

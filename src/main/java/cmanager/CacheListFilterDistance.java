@@ -7,32 +7,32 @@ public class CacheListFilterDistance extends CacheListFilterModel {
 
     private static final long serialVersionUID = 1L;
 
-    private Double maxDistance;
+    private Double distanceMax;
     private Location location;
 
     public CacheListFilterDistance() {
         super(FILTER_TYPE.SINGLE_FILTER_VALUE);
-        lblLeft2.setText("Maximum distance to location (km): ");
+        labelLeft2.setText("Maximum distance to location (km): ");
         runDoModelUpdateNow =
                 new Runnable() {
                     @Override
                     public void run() {
-                        maxDistance = Double.valueOf(textField.getText());
+                        distanceMax = Double.valueOf(textField.getText());
                     }
                 };
     }
 
-    public void setLocation(Location l) {
-        location = l;
+    public void setLocation(Location location) {
+        this.location = location;
     }
 
     @Override
-    protected boolean isGood(Geocache g) {
-        if (location == null || maxDistance == null) {
+    protected boolean isGood(Geocache geocache) {
+        if (location == null || distanceMax == null) {
             return true;
         }
 
-        final double distance = g.getCoordinate().distanceHaversine(location);
-        return distance < maxDistance;
+        final double distance = geocache.getCoordinate().distanceHaversine(location);
+        return distance < distanceMax;
     }
 }

@@ -23,6 +23,7 @@ import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import javax.swing.BoxLayout;
 import javax.swing.JComponent;
 import javax.swing.JInternalFrame;
@@ -52,11 +53,11 @@ public class CacheListView extends JInternalFrame {
 
     private static final long serialVersionUID = -3610178481183679565L;
 
-    private final CacheListController clc;
+    private final CacheListController cacheListController;
     private final JTable table;
-    private final CachePanel panelCache;
-    private final JLabel lblCacheCount;
-    private final JLabel lblLblwaypointscount;
+    private final CachePanel cachePanel;
+    private final JLabel labelCacheCount;
+    private final JLabel lblWaypointsCount;
     private final CustomJMapViewer mapViewer;
     private final JPanel panelFilters;
 
@@ -64,17 +65,18 @@ public class CacheListView extends JInternalFrame {
 
     /** Create the frame. */
     public CacheListView(
-            final CacheListController clc, final CacheListView.RunLocationDialogI ldi) {
-        this.clc = clc;
+            final CacheListController cacheListController,
+            final CacheListView.RunLocationDialogI runLocationDialog) {
+        this.cacheListController = cacheListController;
 
-        final AbstractTableModel atm = clc.getTableModel();
-        table = new JTable(atm);
+        final AbstractTableModel tableModel = cacheListController.getTableModel();
+        table = new JTable(tableModel);
         table.setRowSelectionAllowed(true);
         table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         table.getSelectionModel()
                 .addListSelectionListener(
                         new ListSelectionListener() {
-                            public void valueChanged(ListSelectionEvent arg0) {
+                            public void valueChanged(ListSelectionEvent listSelectionEvent) {
                                 updateCachePanelToSelection();
                                 updateMapMarkers();
                             }
@@ -110,9 +112,9 @@ public class CacheListView extends JInternalFrame {
         splitPane1.setRightComponent(splitPane2);
         splitPane2.setVisible(false);
 
-        panelCache = new CachePanel();
-        panelCache.setVisible(false);
-        splitPane2.setLeftComponent(panelCache);
+        cachePanel = new CachePanel();
+        cachePanel.setVisible(false);
+        splitPane2.setLeftComponent(cachePanel);
 
         final JPanel panelMap = new JPanel();
         panelMap.setVisible(false);
@@ -124,41 +126,42 @@ public class CacheListView extends JInternalFrame {
         mapViewer.setFocusable(true);
         panelMap.add(mapViewer, BorderLayout.CENTER);
 
-        final JPanel panel_2 = new JPanel();
-        panelMap.add(panel_2, BorderLayout.SOUTH);
+        final JPanel panel2 = new JPanel();
+        panelMap.add(panel2, BorderLayout.SOUTH);
 
-        final JLabel lblMapHelp =
+        final JLabel labelMapHelp =
                 new JLabel("Drag map with right mouse, selection box with left mouse.");
-        lblMapHelp.setFont(new Font("Dialog", Font.BOLD, 9));
-        panel_2.add(lblMapHelp);
+        labelMapHelp.setFont(new Font("Dialog", Font.BOLD, 9));
+        panel2.add(labelMapHelp);
 
-        // Make map movable with mouse
+        // Make map movable with mouse.
         final DefaultMapController mapController = new DefaultMapController(mapViewer);
         mapController.setMovementMouseButton(MouseEvent.BUTTON3);
 
         mapViewer.addMouseListener(
                 new MouseAdapter() {
                     @Override
-                    public void mouseClicked(MouseEvent e) {
-                        super.mouseClicked(e);
+                    public void mouseClicked(MouseEvent mouseEvent) {
+                        super.mouseClicked(mouseEvent);
 
-                        if (e.getButton() == MouseEvent.BUTTON1) {
-                            final Point p = e.getPoint();
+                        if (mouseEvent.getButton() == MouseEvent.BUTTON1) {
+                            final Point point = mouseEvent.getPoint();
 
                             // Handle attribution clicks.
-                            mapViewer.getAttribution().handleAttribution(p, true);
+                            mapViewer.getAttribution().handleAttribution(point, true);
 
                             // Handle geocaches.
-                            final Geocache g = getMapFocusedCache(p);
-                            if (g == null) {
+                            final Geocache geocache = getMapFocusedCache(point);
+                            if (geocache == null) {
                                 return;
                             }
 
-                            if (e.getClickCount() == 1
-                                    && ((e.getModifiersEx() & InputEvent.CTRL_DOWN_MASK) != 0)) {
-                                DesktopUtil.openUrl(g.getURL());
-                            } else if (e.getClickCount() == 1) {
-                                panelCache.setCache(g);
+                            if (mouseEvent.getClickCount() == 1
+                                    && ((mouseEvent.getModifiersEx() & InputEvent.CTRL_DOWN_MASK)
+                                            != 0)) {
+                                DesktopUtil.openUrl(geocache.getUrl());
+                            } else if (mouseEvent.getClickCount() == 1) {
+                                cachePanel.setCache(geocache);
                             }
                         }
                     }
@@ -166,30 +169,31 @@ public class CacheListView extends JInternalFrame {
         mapViewer.addMouseMotionListener(
                 new MouseAdapter() {
                     @Override
-                    public void mouseMoved(MouseEvent e) {
-                        final Point p = e.getPoint();
-                        final Geocache g = getMapFocusedCache(p);
+                    public void mouseMoved(MouseEvent mouseEvent) {
+                        final Point point = mouseEvent.getPoint();
+                        final Geocache geocache = getMapFocusedCache(point);
 
                         String tip = null;
-                        if (g != null) {
-                            tip = g.getName();
+                        if (geocache != null) {
+                            tip = geocache.getName();
                         }
                         mapViewer.setToolTipText(tip);
                     }
                 });
 
-        // box selection
-        final MouseAdapter ma =
+        // Box selection.
+        final MouseAdapter mouseAdapter =
                 new MouseAdapter() {
                     private Point start = null;
                     private Point end = null;
 
-                    public void mouseReleased(MouseEvent e) {
+                    public void mouseReleased(MouseEvent mouseEvent) {
                         if (end == null || start == null) {
                             return;
                         }
 
-                        final ArrayList<Geocache> list = getMapSelectedCaches(start, e.getPoint());
+                        final List<Geocache> list =
+                                getMapSelectedCaches(start, mouseEvent.getPoint());
                         table.clearSelection();
                         addToTableSelection(list);
 
@@ -198,25 +202,25 @@ public class CacheListView extends JInternalFrame {
                         mapViewer.setPoints(null, null);
                     }
 
-                    public void mousePressed(MouseEvent e) {
-                        if (e.getButton() == MouseEvent.BUTTON1) {
-                            start = e.getPoint();
+                    public void mousePressed(MouseEvent mouseEvent) {
+                        if (mouseEvent.getButton() == MouseEvent.BUTTON1) {
+                            start = mouseEvent.getPoint();
                         } else {
                             start = null;
                         }
                     }
 
-                    public void mouseDragged(MouseEvent e) {
+                    public void mouseDragged(MouseEvent mouseEvent) {
                         if (start == null) {
                             return;
                         }
 
-                        end = e.getPoint();
+                        end = mouseEvent.getPoint();
                         mapViewer.setPoints(start, end);
                     }
                 };
-        mapViewer.addMouseListener(ma);
-        mapViewer.addMouseMotionListener(ma);
+        mapViewer.addMouseListener(mouseAdapter);
+        mapViewer.addMouseMotionListener(mouseAdapter);
 
         final JPanel panelBar = new JPanel();
         getContentPane().add(panelBar, BorderLayout.SOUTH);
@@ -230,50 +234,50 @@ public class CacheListView extends JInternalFrame {
         panel.add(panelCaches, BorderLayout.NORTH);
         panelCaches.setLayout(new FlowLayout(FlowLayout.RIGHT, 5, 5));
 
-        lblCacheCount = new JLabel("0");
-        panelCaches.add(lblCacheCount);
+        labelCacheCount = new JLabel("0");
+        panelCaches.add(labelCacheCount);
 
-        final JLabel lblCaches = new JLabel("Caches");
-        panelCaches.add(lblCaches);
+        final JLabel labelCaches = new JLabel("Caches");
+        panelCaches.add(labelCaches);
 
-        final JPanel panel_1 = new JPanel();
-        panel.add(panel_1, BorderLayout.SOUTH);
-        panel_1.setLayout(new BorderLayout(10, 0));
+        final JPanel panel1 = new JPanel();
+        panel.add(panel1, BorderLayout.SOUTH);
+        panel1.setLayout(new BorderLayout(10, 0));
 
-        lblLblwaypointscount = new JLabel("0 Waypoints");
-        lblLblwaypointscount.setHorizontalAlignment(SwingConstants.CENTER);
-        lblLblwaypointscount.setFont(new Font("Dialog", Font.BOLD, 10));
-        panel_1.add(lblLblwaypointscount, BorderLayout.NORTH);
+        lblWaypointsCount = new JLabel("0 Waypoints");
+        lblWaypointsCount.setHorizontalAlignment(SwingConstants.CENTER);
+        lblWaypointsCount.setFont(new Font("Dialog", Font.BOLD, 10));
+        panel1.add(lblWaypointsCount, BorderLayout.NORTH);
 
         final JPanel panelSelected = new JPanel();
-        panel_1.add(panelSelected, BorderLayout.SOUTH);
+        panel1.add(panelSelected, BorderLayout.SOUTH);
         panelSelected.setLayout(new BorderLayout(10, 0));
         panelSelected.setVisible(false);
 
         final JSeparator separator = new JSeparator();
         panelSelected.add(separator, BorderLayout.NORTH);
 
-        final JPanel panel_4 = new JPanel();
-        panelSelected.add(panel_4, BorderLayout.SOUTH);
-        panel_4.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
+        final JPanel panel4 = new JPanel();
+        panelSelected.add(panel4, BorderLayout.SOUTH);
+        panel4.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
 
-        final JLabel lblSelected = new JLabel("0");
-        lblSelected.setFont(new Font("Dialog", Font.PLAIN, 10));
-        panel_4.add(lblSelected);
+        final JLabel labelSelected = new JLabel("0");
+        labelSelected.setFont(new Font("Dialog", Font.PLAIN, 10));
+        panel4.add(labelSelected);
 
-        final JLabel lblNewLabel_1 = new JLabel("Selected");
-        lblNewLabel_1.setFont(new Font("Dialog", Font.PLAIN, 10));
-        panel_4.add(lblNewLabel_1);
+        final JLabel label1 = new JLabel("Selected");
+        label1.setFont(new Font("Dialog", Font.PLAIN, 10));
+        panel4.add(label1);
 
         table.getSelectionModel()
                 .addListSelectionListener(
                         new ListSelectionListener() {
-                            public void valueChanged(ListSelectionEvent e) {
+                            public void valueChanged(ListSelectionEvent listSelectionEvent) {
                                 final int selected = table.getSelectedRowCount();
                                 if (selected == 0) {
                                     panelSelected.setVisible(false);
                                 } else {
-                                    lblSelected.setText(Integer.valueOf(selected).toString());
+                                    labelSelected.setText(Integer.valueOf(selected).toString());
                                     panelSelected.setVisible(true);
                                 }
                             }
@@ -282,22 +286,22 @@ public class CacheListView extends JInternalFrame {
         final JPanel panelButtons = new JPanel();
         panelBar.add(panelButtons, BorderLayout.WEST);
 
-        final JToggleButton tglbtnList = new JToggleButton("List");
-        tglbtnList.addActionListener(
+        final JToggleButton toggleButtonList = new JToggleButton("List");
+        toggleButtonList.addActionListener(
                 new ActionListener() {
-                    public void actionPerformed(ActionEvent arg0) {
-                        scrollPane.setVisible(tglbtnList.isSelected());
+                    public void actionPerformed(ActionEvent actionEvent) {
+                        scrollPane.setVisible(toggleButtonList.isSelected());
                         fixSplitPanes(splitPane1, splitPane2);
                     }
                 });
-        tglbtnList.setSelected(true);
-        panelButtons.add(tglbtnList);
+        toggleButtonList.setSelected(true);
+        panelButtons.add(toggleButtonList);
 
-        final JToggleButton tglbtnMap = new JToggleButton("Map");
-        tglbtnMap.addActionListener(
+        final JToggleButton toggleButtonMap = new JToggleButton("Map");
+        toggleButtonMap.addActionListener(
                 new ActionListener() {
-                    public void actionPerformed(ActionEvent arg0) {
-                        panelMap.setVisible(tglbtnMap.isSelected());
+                    public void actionPerformed(ActionEvent actionEvent) {
+                        panelMap.setVisible(toggleButtonMap.isSelected());
                         fixSplitPanes(splitPane1, splitPane2);
 
                         SwingUtilities.invokeLater(
@@ -309,39 +313,40 @@ public class CacheListView extends JInternalFrame {
                     }
                 });
 
-        final JToggleButton tglbtnCache = new JToggleButton("Cache");
-        tglbtnCache.addActionListener(
+        final JToggleButton toggleButtonCache = new JToggleButton("Cache");
+        toggleButtonCache.addActionListener(
                 new ActionListener() {
-                    public void actionPerformed(ActionEvent arg0) {
-                        panelCache.setVisible(tglbtnCache.isSelected());
+                    public void actionPerformed(ActionEvent actionEvent) {
+                        cachePanel.setVisible(toggleButtonCache.isSelected());
                         fixSplitPanes(splitPane1, splitPane2);
                     }
                 });
-        panelButtons.add(tglbtnCache);
-        panelButtons.add(tglbtnMap);
+        panelButtons.add(toggleButtonCache);
+        panelButtons.add(toggleButtonMap);
 
         table.addMouseListener(
                 new MouseAdapter() {
-                    public void mouseReleased(MouseEvent e) {
-                        popupPoint = e.getPoint();
+                    public void mouseReleased(MouseEvent mouseEvent) {
+                        popupPoint = mouseEvent.getPoint();
                     }
                 });
 
-        final JPopupMenu jpm = new JPopupMenu();
-        table.setComponentPopupMenu(jpm);
+        final JPopupMenu popupMenu = new JPopupMenu();
+        table.setComponentPopupMenu(popupMenu);
 
-        final JMenuItem mnLocationDialog = new JMenuItem("Add as Location");
-        mnLocationDialog.addActionListener(
+        final JMenuItem menuLocationDialog = new JMenuItem("Add as Location");
+        menuLocationDialog.addActionListener(
                 new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
+                    public void actionPerformed(ActionEvent actionEvent) {
                         final int row = table.rowAtPoint(popupPoint);
-                        final CacheListModel.CLMTableModel model =
-                                (CacheListModel.CLMTableModel) table.getModel();
-                        final Geocache g = model.getObject(table.convertRowIndexToModel(row));
-                        ldi.openDialog(g);
+                        final CacheListModel.CacheListTableModel model =
+                                (CacheListModel.CacheListTableModel) table.getModel();
+                        final Geocache geocache =
+                                model.getObject(table.convertRowIndexToModel(row));
+                        runLocationDialog.openDialog(geocache);
                     }
                 });
-        jpm.add(mnLocationDialog);
+        popupMenu.add(menuLocationDialog);
 
         table.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT)
                 .getParent()
@@ -364,14 +369,15 @@ public class CacheListView extends JInternalFrame {
     }
 
     public void updateCachePanelToSelection() {
-        final CacheListModel.CLMTableModel model = (CacheListModel.CLMTableModel) table.getModel();
+        final CacheListModel.CacheListTableModel model =
+                (CacheListModel.CacheListTableModel) table.getModel();
         if (table.getSelectedRows().length == 1) {
-            final Geocache g =
+            final Geocache geocache =
                     model.getObject(table.convertRowIndexToModel(table.getSelectedRow()));
-            panelCache.setCache(g);
+            cachePanel.setCache(geocache);
         }
         if (table.getSelectedRows().length == 0) {
-            panelCache.setCache(null);
+            cachePanel.setCache(null);
         }
     }
 
@@ -384,108 +390,111 @@ public class CacheListView extends JInternalFrame {
 
         mapViewer.removeAllMapMarkers();
 
-        final CacheListModel.CLMTableModel tableModel =
-                (CacheListModel.CLMTableModel) table.getModel();
+        final CacheListModel.CacheListTableModel tableModel =
+                (CacheListModel.CacheListTableModel) table.getModel();
         if (table.getSelectedRows().length > 0) {
             for (final int selection : table.getSelectedRows()) {
-                final Geocache g = tableModel.getObject(table.convertRowIndexToModel(selection));
-                addMapMarker(g);
+                final Geocache geocache =
+                        tableModel.getObject(table.convertRowIndexToModel(selection));
+                addMapMarker(geocache);
             }
         } else {
-            for (final Geocache g : clc.getModel().getList()) {
-                addMapMarker(g);
+            for (final Geocache geocache : cacheListController.getModel().getList()) {
+                addMapMarker(geocache);
             }
         }
 
         mapViewer.setDisplayToFitMapMarkers();
     }
 
-    private void addMapMarker(Geocache g) {
-        final MapMarkerDot mmd = new MapMarkerCache(g);
-        mapViewer.addMapMarker(mmd);
+    private void addMapMarker(Geocache geocache) {
+        final MapMarkerDot mapMarkerDot = new MapMarkerCache(geocache);
+        mapViewer.addMapMarker(mapMarkerDot);
     }
 
-    private class MapMarkerCache extends MapMarkerDot {
-        private Geocache g;
+    private static class MapMarkerCache extends MapMarkerDot {
 
-        public MapMarkerCache(Geocache g) {
+        private final Geocache geocache;
+
+        public MapMarkerCache(Geocache geocache) {
             super(
                     new org.openstreetmap.gui.jmapviewer.Coordinate(
-                            g.getCoordinate().getLat(), g.getCoordinate().getLon()));
-            this.g = g;
+                            geocache.getCoordinate().getLatitude(),
+                            geocache.getCoordinate().getLongitude()));
+            this.geocache = geocache;
 
             setName("");
 
-            if (g.getType().equals(GeocacheType.getTradiType())) {
+            if (geocache.getType().equals(GeocacheType.getTradiType())) {
                 setColor(new Color(0x009900));
-            } else if (g.getType().equals(GeocacheType.getMultiType())) {
+            } else if (geocache.getType().equals(GeocacheType.getMultiType())) {
                 setColor(new Color(0xFFCC00));
-            } else if (g.getType().equals(GeocacheType.getMysteryType())) {
+            } else if (geocache.getType().equals(GeocacheType.getMysteryType())) {
                 setColor(new Color(0x0066FF));
             } else {
                 setColor(Color.GRAY);
             }
         }
 
-        public void setColor(Color c) {
+        public void setColor(Color color) {
             super.setColor(Color.BLACK);
-            super.setBackColor(c);
+            super.setBackColor(color);
         }
 
         public Geocache getCache() {
-            return g;
+            return geocache;
         }
     }
 
-    private ArrayList<Geocache> getMapSelectedCaches(Point p1, Point p2) {
-        final ArrayList<Geocache> list = new ArrayList<>();
-        if (p1 == null || p2 == null) {
+    private List<Geocache> getMapSelectedCaches(Point point1, Point point2) {
+        final List<Geocache> list = new ArrayList<>();
+        if (point1 == null || point2 == null) {
             return list;
         }
 
-        final int x1 = p1.x < p2.x ? p1.x : p2.x;
-        final int x2 = p1.x >= p2.x ? p1.x : p2.x;
-        final int y1 = p1.y < p2.y ? p1.y : p2.y;
-        final int y2 = p1.y >= p2.y ? p1.y : p2.y;
+        final int x1 = Math.min(point1.x, point2.x);
+        final int x2 = Math.max(point1.x, point2.x);
+        final int y1 = Math.min(point1.y, point2.y);
+        final int y2 = Math.max(point1.y, point2.y);
 
-        for (final MapMarker mm : mapViewer.getMapMarkerList()) {
-            final MapMarkerCache mmc = (MapMarkerCache) mm;
-            final Point makerPos = mapViewer.getMapPosition(mm.getLat(), mm.getLon());
+        for (final MapMarker mapMarker : mapViewer.getMapMarkerList()) {
+            final MapMarkerCache mapMarkerCache = (MapMarkerCache) mapMarker;
+            final Point markerPosition =
+                    mapViewer.getMapPosition(mapMarker.getLat(), mapMarker.getLon());
 
-            if (makerPos != null
-                    && makerPos.x >= x1
-                    && makerPos.x <= x2
-                    && makerPos.y >= y1
-                    && makerPos.y <= y2) {
-                list.add(mmc.getCache());
+            if (markerPosition != null
+                    && markerPosition.x >= x1
+                    && markerPosition.x <= x2
+                    && markerPosition.y >= y1
+                    && markerPosition.y <= y2) {
+                list.add(mapMarkerCache.getCache());
             }
         }
         return list;
     }
 
-    public void addToTableSelection(Geocache g) {
-        final ArrayList<Geocache> list = new ArrayList<>();
-        list.add(g);
+    public void addToTableSelection(Geocache geocache) {
+        final List<Geocache> list = new ArrayList<>();
+        list.add(geocache);
         addToTableSelection(list);
     }
 
-    public void addToTableSelection(final ArrayList<Geocache> list_in) {
+    public void addToTableSelection(final List<Geocache> listIn) {
         doNotUpdateMakers = true;
 
-        final LinkedList<Geocache> list = new LinkedList<>();
-        list.addAll(list_in);
+        final LinkedList<Geocache> list = new LinkedList<>(listIn);
 
-        final CacheListModel.CLMTableModel tableModel =
-                (CacheListModel.CLMTableModel) table.getModel();
-        for (int i = 0; !list_in.isEmpty() && i < table.getRowCount(); i++) {
-            final Geocache gTable = tableModel.getObject(table.convertRowIndexToModel(i));
+        final CacheListModel.CacheListTableModel tableModel =
+                (CacheListModel.CacheListTableModel) table.getModel();
+        for (int i = 0; !listIn.isEmpty() && i < table.getRowCount(); i++) {
+            final Geocache geocacheTable = tableModel.getObject(table.convertRowIndexToModel(i));
 
-            Iterator<Geocache> it = list.iterator();
-            while (it.hasNext()) {
-                final Geocache g = it.next();
-                if (gTable == g) {
-                    table.addRowSelectionInterval(i, i); // slow -> disablUpdateMakers
-                    it.remove();
+            Iterator<Geocache> iterator = list.iterator();
+            while (iterator.hasNext()) {
+                final Geocache geocache = iterator.next();
+                if (geocacheTable == geocache) {
+                    table.addRowSelectionInterval(i, i); // slow -> disableUpdateMakers
+                    iterator.remove();
                     break;
                 }
             }
@@ -495,12 +504,12 @@ public class CacheListView extends JInternalFrame {
         updateMapMarkers();
     }
 
-    private void addRowSelectionInterval(int i1, int i2) {
-        if (i1 > i2) {
+    private void addRowSelectionInterval(int intervalStart, int intervalEnd) {
+        if (intervalStart > intervalEnd) {
             return;
         }
 
-        table.addRowSelectionInterval(i1, i2);
+        table.addRowSelectionInterval(intervalStart, intervalEnd);
     }
 
     public void invertTableSelection() {
@@ -509,14 +518,14 @@ public class CacheListView extends JInternalFrame {
         if (table.getSelectedRowCount() == 0) {
             table.selectAll();
         } else {
-            final int selection[] = table.getSelectedRows();
+            final int[] selection = table.getSelectedRows();
             table.clearSelection();
 
-            addRowSelectionInterval(0, selection[0] - 1); // preceding rows
+            addRowSelectionInterval(0, selection[0] - 1); // Preceding rows.
             for (int i = 0; i < selection.length - 1; i++) {
                 addRowSelectionInterval(selection[i] + 1, selection[i + 1] - 1);
             }
-            // proceding rows
+            // Proceeding rows.
             addRowSelectionInterval(selection[selection.length - 1] + 1, table.getRowCount() - 1);
         }
 
@@ -524,28 +533,27 @@ public class CacheListView extends JInternalFrame {
         updateMapMarkers();
     }
 
-    private Geocache getMapFocusedCache(Point p) {
-        final int X = p.x + 3;
-        final int Y = p.y + 3;
-        final java.util.List<MapMarker> ar = mapViewer.getMapMarkerList();
+    private Geocache getMapFocusedCache(Point point) {
+        final int X = point.x + 3;
+        final int Y = point.y + 3;
+        final List<MapMarker> mapMarkers = mapViewer.getMapMarkerList();
 
-        Iterator<MapMarker> i = ar.iterator();
-        while (i.hasNext()) {
-            final MapMarkerCache mapMarker = (MapMarkerCache) i.next();
+        for (final MapMarker marker : mapMarkers) {
+            final MapMarkerCache mapMarkerCache = (MapMarkerCache) marker;
 
             final Point MarkerPosition =
-                    mapViewer.getMapPosition(mapMarker.getLat(), mapMarker.getLon());
+                    mapViewer.getMapPosition(mapMarkerCache.getLat(), mapMarkerCache.getLon());
             if (MarkerPosition != null) {
                 final int centerX = MarkerPosition.x;
                 final int centerY = MarkerPosition.y;
 
-                // calculate the radius from the touch to the center of the dot
-                final double radCircle =
+                // Calculate the radius from the touch to the center of the dot.
+                final double circleRadius =
                         Math.sqrt(
                                 (((centerX - X) * (centerX - X)) + (centerY - Y) * (centerY - Y)));
 
-                if (radCircle < 10) {
-                    return mapMarker.getCache();
+                if (circleRadius < 10) {
+                    return mapMarkerCache.getCache();
                 }
             }
         }
@@ -553,19 +561,20 @@ public class CacheListView extends JInternalFrame {
         return null;
     }
 
-    public ArrayList<Geocache> getSelectedCaches() {
-        final CacheListModel.CLMTableModel model = (CacheListModel.CLMTableModel) table.getModel();
-        final ArrayList<Geocache> selected = new ArrayList<>();
-        for (int row : table.getSelectedRows()) {
-            final Geocache g = model.getObject(table.convertRowIndexToModel(row));
-            selected.add(g);
+    public List<Geocache> getSelectedCaches() {
+        final CacheListModel.CacheListTableModel model =
+                (CacheListModel.CacheListTableModel) table.getModel();
+        final List<Geocache> selected = new ArrayList<>();
+        for (final int row : table.getSelectedRows()) {
+            final Geocache geocache = model.getObject(table.convertRowIndexToModel(row));
+            selected.add(geocache);
         }
         return selected;
     }
 
     public void resetView() {
         updateTableView();
-        panelCache.setCache(null);
+        cachePanel.setCache(null);
     }
 
     public void updateTableView() {
@@ -581,25 +590,25 @@ public class CacheListView extends JInternalFrame {
     }
 
     public static boolean fixSplitPane(JSplitPane pane, double dividerLocation) {
-        boolean retVal;
+        boolean returnValue;
         pane.setVisible(
                 pane.getLeftComponent().isVisible() || pane.getRightComponent().isVisible());
         if (pane.getLeftComponent().isVisible() && pane.getRightComponent().isVisible()) {
             pane.setDividerSize(new JSplitPane().getDividerSize());
             pane.setDividerLocation(dividerLocation);
-            retVal = true;
+            returnValue = true;
         } else {
             pane.setDividerSize(0);
-            retVal = false;
+            returnValue = false;
         }
 
         pane.revalidate();
         pane.repaint();
-        return retVal;
+        return returnValue;
     }
 
     public void setCacheCount(Integer count) {
-        lblCacheCount.setText(count.toString());
+        labelCacheCount.setText(count.toString());
     }
 
     public void setWaypointCount(Integer count, Integer orphans) {
@@ -607,20 +616,20 @@ public class CacheListView extends JInternalFrame {
         if (orphans > 0) {
             text = text + " (" + orphans.toString() + " Orphans)";
         }
-        lblLblwaypointscount.setText(text);
+        lblWaypointsCount.setText(text);
     }
 
     public void addFilter(final CacheListFilterModel filter) {
         filter.addRemoveAction(
                 new Runnable() {
                     public void run() {
-                        clc.removeFilter(filter);
+                        cacheListController.removeFilter(filter);
                     }
                 });
         filter.addRunOnFilterUpdate(
                 new Runnable() {
                     public void run() {
-                        clc.filtersUpdated();
+                        cacheListController.filtersUpdated();
                     }
                 });
 
@@ -641,8 +650,8 @@ public class CacheListView extends JInternalFrame {
         return table;
     }
 
-    public JLabel getLblCacheCount() {
-        return lblCacheCount;
+    public JLabel getLabelCacheCount() {
+        return labelCacheCount;
     }
 
     public JMapViewer getMapViewer() {
@@ -650,6 +659,6 @@ public class CacheListView extends JInternalFrame {
     }
 
     public interface RunLocationDialogI {
-        public void openDialog(Geocache g);
+        void openDialog(Geocache geocache);
     }
 }

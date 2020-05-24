@@ -5,78 +5,82 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 
 class BufferReadAbstraction {
 
     private final int LIMIT = 1024 * 1024 * 10;
-    private char[] cbuf = new char[LIMIT];
-    private BufferedReader br;
+    private final char[] characterBuffer = new char[LIMIT];
+    private BufferedReader bufferedReader;
 
-    public BufferReadAbstraction(InputStream is) throws UnsupportedEncodingException {
-        br = new BufferedReader(new InputStreamReader(is, "UTF-8"), LIMIT);
+    public BufferReadAbstraction(InputStream inputStream) {
+        bufferedReader =
+                new BufferedReader(
+                        new InputStreamReader(inputStream, StandardCharsets.UTF_8), LIMIT);
     }
 
-    public BufferReadAbstraction(String s) throws UnsupportedEncodingException {
-        br =
+    public BufferReadAbstraction(String string) {
+        bufferedReader =
                 new BufferedReader(
                         new InputStreamReader(
-                                new ByteArrayInputStream(s.getBytes("UTF-8")), "UTF-8"));
+                                new ByteArrayInputStream(string.getBytes(StandardCharsets.UTF_8)),
+                                StandardCharsets.UTF_8));
     }
 
     public char charAt(int index) throws IOException {
-        br.mark(index + 1);
-        br.read(cbuf, 0, index + 1);
-        br.reset();
+        bufferedReader.mark(index + 1);
+        bufferedReader.read(characterBuffer, 0, index + 1);
+        bufferedReader.reset();
 
-        return cbuf[index];
+        return characterBuffer[index];
     }
 
     public boolean available() throws IOException {
-        return br.ready();
+        return bufferedReader.ready();
     }
 
     public void deleteChar() throws IOException {
-        br.skip(1);
+        bufferedReader.skip(1);
     }
 
     public void deleteUntil(int end) throws IOException {
-        br.skip(end);
+        bufferedReader.skip(end);
     }
 
     public String substring(int start, int end) throws IOException {
-        br.mark(end + 1);
-        br.read(cbuf, 0, end + 1);
-        br.reset();
+        bufferedReader.mark(end + 1);
+        bufferedReader.read(characterBuffer, 0, end + 1);
+        bufferedReader.reset();
 
-        return new String(cbuf, start, end - start);
+        return new String(characterBuffer, start, end - start);
     }
 
     public int indexOf(String str) throws IOException {
-        br.mark(LIMIT);
+        bufferedReader.mark(LIMIT);
         int offset = 0;
         int size = 200;
 
         while (true) {
             if (offset + size > LIMIT) {
-                br.reset();
+                bufferedReader.reset();
                 return -1;
             }
-            final int read = br.read(cbuf, offset, size);
+            final int read = bufferedReader.read(characterBuffer, offset, size);
             offset += read;
             size = size * 2;
 
             final int len = str.length();
             for (int j = 0; j < offset; j++) {
-                if (cbuf[j] == str.charAt(0)) {
+                if (characterBuffer[j] == str.charAt(0)) {
                     boolean match = true;
                     for (int i = 1; i < len && j + i < offset; i++) {
-                        if (cbuf[j + i] != str.charAt(i)) {
+                        if (characterBuffer[j + i] != str.charAt(i)) {
                             match = false;
+                            break;
                         }
                     }
                     if (match) {
-                        br.reset();
+                        bufferedReader.reset();
                         return j;
                     }
                 }
@@ -86,21 +90,21 @@ class BufferReadAbstraction {
 
     public StringBuilder toStringBuilder() throws IOException {
         final StringBuilder sb = new StringBuilder();
-        char[] buffer = new char[1024 * 1024];
+        final char[] buffer = new char[1024 * 1024];
         int readChars;
-        while ((readChars = br.read(buffer)) > 0) {
+        while ((readChars = bufferedReader.read(buffer)) > 0) {
             sb.append(buffer, 0, readChars);
         }
         return sb;
     }
 
     public String getHead(int max) throws IOException {
-        max = max < LIMIT - 1 ? max : LIMIT - 1;
+        max = Math.min(max, LIMIT - 1);
 
-        br.mark(max);
-        max = br.read(cbuf, 0, max);
-        br.reset();
+        bufferedReader.mark(max);
+        max = bufferedReader.read(characterBuffer, 0, max);
+        bufferedReader.reset();
 
-        return new String(cbuf, 0, max);
+        return new String(characterBuffer, 0, max);
     }
 }

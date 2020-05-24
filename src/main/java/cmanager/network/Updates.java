@@ -3,7 +3,7 @@ package cmanager.network;
 import cmanager.global.Version;
 import cmanager.xml.Element;
 import cmanager.xml.Parser;
-import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Update checking handlers.
@@ -21,7 +21,7 @@ public class Updates {
         if (updateAvailable == null) {
             try {
                 final String url = "https://github.com/FriedrichFroebel/cmanager/releases.atom";
-                final String http = HTTP.get(url);
+                final String http = Http.get(url);
 
                 final Element root = Parser.parse(http);
 
@@ -52,7 +52,7 @@ public class Updates {
      * @throws NumberFormatException No suitable version could be found.
      */
     private static String findLatestRelease(Element root) throws NumberFormatException {
-        final ArrayList<Element> entries = root.getChild("feed").getChildren("entry");
+        final List<Element> entries = root.getChild("feed").getChildren("entry");
         for (final Element entry : entries) {
             final String title = entry.getChild("title").getUnescapedBody();
             if (title != null && !title.isEmpty() && Character.isDigit(title.charAt(0))) {

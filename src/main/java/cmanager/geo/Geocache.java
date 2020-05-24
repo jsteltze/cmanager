@@ -4,13 +4,14 @@ import cmanager.global.Constants;
 import cmanager.util.ObjectHelper;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.List;
 import org.joda.time.DateTime;
 
 public class Geocache implements Serializable, Comparable<String> {
 
     private static final long serialVersionUID = 6173771530979347662L;
 
-    private String code;
+    private final String code;
     private String name;
     private Coordinate coordinate;
     private Double difficulty;
@@ -18,24 +19,24 @@ public class Geocache implements Serializable, Comparable<String> {
     private GeocacheType type;
     private GeocacheContainerType container;
     private String owner = null;
-    private String code_gc = null; // linked cache on gc
+    private String codeGc = null; // Linked cache on GC.
     private String listing = null;
-    private String listing_short = null;
+    private String listingShort = null;
     private String hint = null;
     private Boolean requiresPassword = null;
 
     private Boolean archived = null;
     private Boolean available = null;
-    private Integer id = null; // required by "Garmin etrex 10"
+    private Integer id = null; // Required by "Garmin etrex 10".
 
     private Boolean gcPremium = null;
-    private Integer favPoints = null;
+    private Integer favoritePoints = null;
 
     private Boolean isFound = null;
 
-    private ArrayList<GeocacheAttribute> attributes = new ArrayList<>();
-    private ArrayList<GeocacheLog> logs = new ArrayList<GeocacheLog>();
-    private ArrayList<Waypoint> wps = new ArrayList<Waypoint>();
+    private List<GeocacheAttribute> attributes = new ArrayList<>();
+    private List<GeocacheLog> logs = new ArrayList<>();
+    private List<Waypoint> waypoints = new ArrayList<>();
 
     public Geocache(
             String code,
@@ -80,34 +81,34 @@ public class Geocache implements Serializable, Comparable<String> {
         return this.type.equals(GeocacheType.getMysteryType());
     }
 
-    public void update(Geocache g) {
-        update(g, true, true);
+    public void update(Geocache geocache) {
+        update(geocache, true, true);
     }
 
-    public void update(Geocache g, boolean override, boolean copyLogs) {
-        if (!code.equals(g.code)) {
+    public void update(Geocache geocache, boolean override, boolean copyLogs) {
+        if (!code.equals(geocache.code)) {
             return;
         }
 
         if (override) {
-            name = ObjectHelper.getBest(name, g.name);
-            coordinate = ObjectHelper.getBest(coordinate, g.coordinate);
-            difficulty = ObjectHelper.getBest(this.getDifficulty(), g.getDifficulty());
-            terrain = ObjectHelper.getBest(terrain, g.terrain);
-            type = g.type;
-            container = ObjectHelper.getBest(container, g.container);
-            owner = ObjectHelper.getBest(owner, g.owner);
-            code_gc = ObjectHelper.getBest(code_gc, g.code_gc);
-            setListing(ObjectHelper.getBest(getListing(), g.getListing()));
-            listing_short = ObjectHelper.getBest(listing_short, g.listing_short);
-            hint = ObjectHelper.getBest(hint, g.hint);
-            archived = ObjectHelper.getBest(archived, g.archived);
-            available = ObjectHelper.getBest(available, g.available);
+            name = ObjectHelper.getBest(name, geocache.name);
+            coordinate = ObjectHelper.getBest(coordinate, geocache.coordinate);
+            difficulty = ObjectHelper.getBest(this.getDifficulty(), geocache.getDifficulty());
+            terrain = ObjectHelper.getBest(terrain, geocache.terrain);
+            type = geocache.type;
+            container = ObjectHelper.getBest(container, geocache.container);
+            owner = ObjectHelper.getBest(owner, geocache.owner);
+            codeGc = ObjectHelper.getBest(codeGc, geocache.codeGc);
+            setListing(ObjectHelper.getBest(getListing(), geocache.getListing()));
+            listingShort = ObjectHelper.getBest(listingShort, geocache.listingShort);
+            hint = ObjectHelper.getBest(hint, geocache.hint);
+            archived = ObjectHelper.getBest(archived, geocache.archived);
+            available = ObjectHelper.getBest(available, geocache.available);
 
-            attributes = ObjectHelper.getBest(attributes, g.attributes);
+            attributes = ObjectHelper.getBest(attributes, geocache.attributes);
         }
         if (copyLogs) {
-            for (final GeocacheLog newLog : g.logs) {
+            for (final GeocacheLog newLog : geocache.logs) {
                 boolean match = false;
                 for (final GeocacheLog oldLog : logs) {
                     if (newLog.equals(oldLog)) {
@@ -122,18 +123,18 @@ public class Geocache implements Serializable, Comparable<String> {
         }
     }
 
-    public String getURL() {
-        if (isGC()) {
+    public String getUrl() {
+        if (isGc()) {
             return "https://www.geocaching.com/geocache/" + code;
         }
-        if (isOC()) {
+        if (isOc()) {
             return Constants.SITE_BASE + code;
         }
 
         return null;
     }
 
-    public String statusAsString() {
+    public String getStatusAsString() {
         if (archived == null || available == null) {
             return null;
         }
@@ -147,34 +148,33 @@ public class Geocache implements Serializable, Comparable<String> {
         return "disabled";
     }
 
-    public boolean isOC() {
+    public boolean isOc() {
         return code.substring(0, 2).toUpperCase().equals("OC");
     }
 
-    public boolean isGC() {
+    public boolean isGc() {
         return code.substring(0, 2).toUpperCase().equals("GC");
     }
 
-    public void add(GeocacheLog gl) {
-        logs.add(gl);
+    public void addLog(GeocacheLog geocacheLog) {
+        logs.add(geocacheLog);
     }
 
-    public void add(ArrayList<GeocacheLog> logs) {
-        for (final GeocacheLog gl : logs) {
-            this.logs.add(gl);
-        }
+    public void addLogs(List<GeocacheLog> logs) {
+        this.logs.addAll(logs);
     }
 
-    public ArrayList<GeocacheLog> getLogs() {
+    public List<GeocacheLog> getLogs() {
         return logs;
     }
 
-    public DateTime getMostRecentFoundLog(String usernameGC, String usernameOC) {
+    public DateTime getMostRecentFoundLog(String usernameGC, String usernameOc) {
         GeocacheLog mostRecentLog = null;
+
         for (final GeocacheLog log : logs) {
             if (log.isFoundLog()) {
                 if ((usernameGC != null && log.isAuthor(usernameGC))
-                        || (usernameOC != null && log.isAuthor(usernameOC))) {
+                        || (usernameOc != null && log.isAuthor(usernameOc))) {
                     if (mostRecentLog == null) {
                         mostRecentLog = log;
                     } else if (log.getDate().isAfter(mostRecentLog.getDate())) {
@@ -183,30 +183,33 @@ public class Geocache implements Serializable, Comparable<String> {
                 }
             }
         }
+
         return mostRecentLog == null ? null : mostRecentLog.getDate();
     }
 
-    public void add(Waypoint wp) {
-        wp.setParent(code);
-        wps.add(wp);
+    public void addWaypoint(Waypoint waypoint) {
+        waypoint.setParent(code);
+        waypoints.add(waypoint);
     }
 
-    public void addWaypoints(ArrayList<GeocacheAttribute> attributes) {
-        for (final GeocacheAttribute a : attributes) {
-            this.addAttribute(a);
-        }
+    public void addWaypoints(List<Waypoint> waypoints) {
+        this.waypoints.addAll(waypoints);
     }
 
-    public ArrayList<GeocacheAttribute> getAttributes() {
+    public List<GeocacheAttribute> getAttributes() {
         return attributes;
     }
 
-    public void addAttribute(GeocacheAttribute a) {
-        attributes.add(a);
+    public void addAttributes(List<GeocacheAttribute> attributes) {
+        this.attributes.addAll(attributes);
     }
 
-    public ArrayList<Waypoint> getWaypoints() {
-        return wps;
+    public void addAttribute(GeocacheAttribute attribute) {
+        attributes.add(attribute);
+    }
+
+    public List<Waypoint> getWaypoints() {
+        return waypoints;
     }
 
     public void setId(Integer id) {
@@ -217,15 +220,15 @@ public class Geocache implements Serializable, Comparable<String> {
         return id;
     }
 
-    public Integer getFavPoints() {
-        return favPoints;
+    public Integer getFavoritePoints() {
+        return favoritePoints;
     }
 
-    public void setFavPoints(Integer favPoints) {
-        this.favPoints = favPoints;
+    public void setFavoritePoints(Integer favoritePoints) {
+        this.favoritePoints = favoritePoints;
     }
 
-    public Boolean getGcPremium() {
+    public Boolean isGcPremium() {
         return gcPremium;
     }
 
@@ -237,7 +240,7 @@ public class Geocache implements Serializable, Comparable<String> {
         this.archived = archived;
     }
 
-    public Boolean getArchived() {
+    public Boolean isArchived() {
         return archived;
     }
 
@@ -245,7 +248,7 @@ public class Geocache implements Serializable, Comparable<String> {
         this.available = available;
     }
 
-    public Boolean getAvailable() {
+    public Boolean isAvailable() {
         return available;
     }
 
@@ -258,11 +261,11 @@ public class Geocache implements Serializable, Comparable<String> {
     }
 
     public void setCodeGC(String gc) {
-        code_gc = gc;
+        codeGc = gc;
     }
 
     public String getCodeGC() {
-        return code_gc;
+        return codeGc;
     }
 
     public String getCode() {
@@ -313,12 +316,12 @@ public class Geocache implements Serializable, Comparable<String> {
         this.container = new GeocacheContainerType(container);
     }
 
-    public String getListing_short() {
-        return listing_short;
+    public String getListingShort() {
+        return listingShort;
     }
 
-    public void setListing_short(String listing_short) {
-        this.listing_short = listing_short;
+    public void setListingShort(String listingShort) {
+        this.listingShort = listingShort;
     }
 
     public Boolean getIsFound() {

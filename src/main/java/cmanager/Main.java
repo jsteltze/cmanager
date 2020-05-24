@@ -9,13 +9,13 @@ import javax.swing.JOptionPane;
 
 public class Main {
 
-    public static void main(String[] args) {
+    public static void main(String[] arguments) {
         nagToUpdateFromJava7();
 
         try {
-            ForkUtil.forkWithRezeidHeapAndExit(args);
-        } catch (Throwable t) {
-            t.printStackTrace();
+            ForkUtil.forkWithRezeidHeapAndExit(arguments);
+        } catch (Throwable throwable) {
+            throwable.printStackTrace();
         }
 
         final MainWindow frame = new MainWindow();

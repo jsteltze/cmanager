@@ -20,6 +20,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -45,16 +46,16 @@ public class DuplicateDialog extends JFrame {
     private final DefaultMutableTreeNode rootNode;
     private final JProgressBar progressBar;
     private String selectedURL;
-    private final JScrollPane scrollPaneTree;
 
-    private AtomicBoolean stopBackgroundThread = new AtomicBoolean(false);
+    private final AtomicBoolean stopBackgroundThread = new AtomicBoolean(false);
     private Thread backgroundThread = null;
 
-    private final ArrayList<GeocacheLog> logsCopied = new ArrayList<>();
+    private final List<GeocacheLog> logsCopied = new ArrayList<>();
     private ShadowList shadowList = null;
 
     /** Create the dialog. */
-    public DuplicateDialog(final CacheListModel clm, final User user, final String uuid) {
+    public DuplicateDialog(
+            final CacheListModel cacheListModel, final User user, final String uuid) {
         setResizable(true);
         this.setMinimumSize(new Dimension(600, 300));
         Logo.setLogo(this);
@@ -78,7 +79,7 @@ public class DuplicateDialog extends JFrame {
         progressBar = new JProgressBar();
         panelBorder.add(progressBar);
 
-        // create the root node
+        // Create the root node.
         rootNode = new DefaultMutableTreeNode("Root");
 
         final JPanel panelTree = new JPanel();
@@ -89,51 +90,55 @@ public class DuplicateDialog extends JFrame {
         panelTree.add(panelUrl, BorderLayout.SOUTH);
         panelUrl.setLayout(new BorderLayout(0, 0));
 
-        final JButton btnURL = new JButton("");
-        btnURL.setBorderPainted(false);
-        btnURL.setOpaque(false);
-        btnURL.setContentAreaFilled(false);
-        // btnURL.setBackground(new JPanel().getBackground());
-        btnURL.addActionListener(
+        final JButton buttonUrl = new JButton("");
+        buttonUrl.setBorderPainted(false);
+        buttonUrl.setOpaque(false);
+        buttonUrl.setContentAreaFilled(false);
+        // buttonUrl.setBackground(new JPanel().getBackground());
+        buttonUrl.addActionListener(
                 new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
+                    public void actionPerformed(ActionEvent actionEvent) {
                         if (selectedURL != null) {
                             DesktopUtil.openUrl(selectedURL);
                         }
                     }
                 });
-        panelUrl.add(btnURL);
+        panelUrl.add(buttonUrl);
 
         final JPanel panel = new JPanel();
         panelUrl.add(panel, BorderLayout.SOUTH);
         panel.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
 
-        final JButton btnClipboard = new JButton("Export all as text to clipboard");
-        panel.add(btnClipboard);
-        btnClipboard.addActionListener(
+        final JButton buttonClipboard = new JButton("Export all as text to clipboard");
+        panel.add(buttonClipboard);
+        buttonClipboard.addActionListener(
                 new ActionListener() {
-                    public void actionPerformed(ActionEvent arg0) {
-                        final StringBuilder sb = new StringBuilder();
+                    public void actionPerformed(ActionEvent actionEvent) {
+                        final StringBuilder stringBuilder = new StringBuilder();
 
                         for (int i = 0; i < rootNode.getChildCount(); i++) {
-                            final DefaultMutableTreeNode dmtn =
+                            final DefaultMutableTreeNode mutableTreeNode =
                                     (DefaultMutableTreeNode) rootNode.getChildAt(i);
-                            final Geocache g = (Geocache) dmtn.getUserObject();
-                            sb.append(g.toString()).append(System.lineSeparator());
+                            final Geocache geocache = (Geocache) mutableTreeNode.getUserObject();
+                            stringBuilder
+                                    .append(geocache.toString())
+                                    .append(System.lineSeparator());
 
-                            for (int j = 0; j < dmtn.getChildCount(); j++) {
+                            for (int j = 0; j < mutableTreeNode.getChildCount(); j++) {
                                 final DefaultMutableTreeNode child =
-                                        (DefaultMutableTreeNode) dmtn.getChildAt(j);
-                                final Geocache g2 = (Geocache) child.getUserObject();
-                                sb.append("  ")
-                                        .append(g2.toString())
+                                        (DefaultMutableTreeNode) mutableTreeNode.getChildAt(j);
+                                final Geocache geocache2 = (Geocache) child.getUserObject();
+                                stringBuilder
+                                        .append("  ")
+                                        .append(geocache2.toString())
                                         .append(System.lineSeparator());
                             }
-                            sb.append(System.lineSeparator());
+                            stringBuilder.append(System.lineSeparator());
                         }
 
-                        final Clipboard clpbrd = Toolkit.getDefaultToolkit().getSystemClipboard();
-                        clpbrd.setContents(new StringSelection(sb.toString()), null);
+                        final Clipboard clipboard =
+                                Toolkit.getDefaultToolkit().getSystemClipboard();
+                        clipboard.setContents(new StringSelection(stringBuilder.toString()), null);
                     }
                 });
 
@@ -141,52 +146,52 @@ public class DuplicateDialog extends JFrame {
         tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
         tree.addTreeSelectionListener(
                 new TreeSelectionListener() {
-                    public void valueChanged(TreeSelectionEvent e) {
+                    public void valueChanged(TreeSelectionEvent treeSelectionEvent) {
                         final DefaultMutableTreeNode node =
                                 (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
                         if (node == null) {
                             return;
                         }
 
-                        final Object userObj = node.getUserObject();
-                        if (userObj instanceof Geocache) {
-                            final Geocache g = (Geocache) userObj;
-                            URL2Button(g.getURL());
+                        final Object userObject = node.getUserObject();
+                        if (userObject instanceof Geocache) {
+                            final Geocache geocache = (Geocache) userObject;
+                            Url2Button(geocache.getUrl());
                         }
                     }
 
-                    private void URL2Button(String url) {
+                    private void Url2Button(String url) {
                         selectedURL = url;
-                        btnURL.setText(
+                        buttonUrl.setText(
                                 "<HTML><FONT color=\"#000099\"><U>" + url + "</U></FONT></HTML>");
                     }
                 });
         tree.addMouseListener(
                 new MouseAdapter() {
-                    public void mousePressed(MouseEvent me) {
-                        if (me.getClickCount() >= 2) {
+                    public void mousePressed(MouseEvent mouseEvent) {
+                        if (mouseEvent.getClickCount() >= 2) {
                             final DefaultMutableTreeNode node =
                                     (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
                             if (node == null) {
                                 return;
                             }
 
-                            final Object userObj = node.getUserObject();
-                            if (userObj instanceof Geocache) {
-                                final Geocache oc = (Geocache) userObj;
+                            final Object userObject = node.getUserObject();
+                            if (userObject instanceof Geocache) {
+                                final Geocache oc = (Geocache) userObject;
 
-                                if (uuid != null && oc.isOC()) {
+                                if (uuid != null && oc.isOc()) {
                                     final DefaultMutableTreeNode parent =
                                             (DefaultMutableTreeNode) node.getParent();
                                     final Geocache gc = (Geocache) parent.getUserObject();
 
                                     try {
-                                        final CopyLogDialog cld =
+                                        final CopyLogDialog copyLogDialog =
                                                 new CopyLogDialog(gc, oc, logsCopied, shadowList);
-                                        cld.setLocationRelativeTo(THIS);
-                                        FrameHelper.showModalFrame(cld, THIS);
-                                    } catch (Throwable e) {
-                                        ExceptionPanel.showErrorDialog(THIS, e);
+                                        copyLogDialog.setLocationRelativeTo(THIS);
+                                        FrameHelper.showModalFrame(copyLogDialog, THIS);
+                                    } catch (Throwable throwable) {
+                                        ExceptionPanel.showErrorDialog(THIS, throwable);
                                     }
                                 }
                             }
@@ -194,7 +199,7 @@ public class DuplicateDialog extends JFrame {
                     }
                 });
 
-        scrollPaneTree =
+        JScrollPane scrollPaneTree =
                 new JScrollPane(
                         tree,
                         JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
@@ -208,38 +213,38 @@ public class DuplicateDialog extends JFrame {
         }
         panelCopyMessage.setLayout(new BorderLayout(0, 0));
 
-        final JLabel lblDoubleClickAn = new JLabel("Double Click an OC cache to open copy dialog.");
-        lblDoubleClickAn.setHorizontalAlignment(SwingConstants.CENTER);
-        panelCopyMessage.add(lblDoubleClickAn);
+        final JLabel lblDoubleClick = new JLabel("Double Click an OC cache to open copy dialog.");
+        lblDoubleClick.setHorizontalAlignment(SwingConstants.CENTER);
+        panelCopyMessage.add(lblDoubleClick);
 
         final JPanel buttonPane = new JPanel();
         getContentPane().add(buttonPane, BorderLayout.SOUTH);
         buttonPane.setLayout(new BorderLayout(0, 0));
 
-        final JPanel panel_1 = new JPanel();
-        buttonPane.add(panel_1, BorderLayout.EAST);
+        final JPanel panel1 = new JPanel();
+        buttonPane.add(panel1, BorderLayout.EAST);
 
-        final JButton okButton = new JButton("Dismiss");
-        panel_1.add(okButton);
-        okButton.setHorizontalAlignment(SwingConstants.RIGHT);
-        okButton.addActionListener(
+        final JButton buttonOk = new JButton("Dismiss");
+        panel1.add(buttonOk);
+        buttonOk.setHorizontalAlignment(SwingConstants.RIGHT);
+        buttonOk.addActionListener(
                 new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
+                    public void actionPerformed(ActionEvent actionEvent) {
                         THIS.setVisible(false);
                         if (backgroundThread != null) stopBackgroundThread.set(true);
                         THIS.dispose();
                     }
                 });
-        getRootPane().setDefaultButton(okButton);
+        getRootPane().setDefaultButton(buttonOk);
 
-        final JPanel panel_2 = new JPanel();
-        buttonPane.add(panel_2, BorderLayout.WEST);
+        final JPanel panel2 = new JPanel();
+        buttonPane.add(panel2, BorderLayout.WEST);
 
         final JLabel labelCandidates = new JLabel("0");
-        panel_2.add(labelCandidates);
+        panel2.add(labelCandidates);
 
-        final JLabel lblHits = new JLabel("Candidates");
-        panel_2.add(lblHits);
+        final JLabel labelHits = new JLabel("Candidates");
+        panel2.add(labelHits);
 
         backgroundThread =
                 new Thread(
@@ -248,13 +253,13 @@ public class DuplicateDialog extends JFrame {
                             @Override
                             public void run() {
                                 try {
-                                    // update local copy of shadow list and load it
+                                    // Update local copy of shadow list and load it.
                                     ShadowList.updateShadowList();
                                     shadowList = ShadowList.loadShadowList();
 
                                     Util.findOnOc(
                                             stopBackgroundThread,
-                                            clm,
+                                            cacheListModel,
                                             new Util.OutputInterface() {
                                                 public void setProgress(
                                                         Integer count, Integer max) {
@@ -292,62 +297,64 @@ public class DuplicateDialog extends JFrame {
                                         return;
                                     }
 
-                                    // sort
-                                    final ArrayList<DefaultMutableTreeNode> sortedList =
+                                    // Sort.
+                                    final List<DefaultMutableTreeNode> sortedList =
                                             new ArrayList<>();
-                                    final ArrayList<DefaultMutableTreeNode> list =
-                                            new ArrayList<>();
+                                    final List<DefaultMutableTreeNode> list = new ArrayList<>();
 
-                                    // get all entrys
+                                    // Get all entries.
                                     for (int i = 0; i < rootNode.getChildCount(); i++) {
                                         list.add((DefaultMutableTreeNode) rootNode.getChildAt(i));
                                     }
                                     rootNode.removeAllChildren();
 
-                                    // sort
+                                    // Sort.
                                     final String gcUsername =
-                                            Settings.getS(Settings.Key.GC_USERNAME);
+                                            Settings.getString(Settings.Key.GC_USERNAME);
                                     while (!list.isEmpty()) {
                                         DefaultMutableTreeNode next = null;
 
-                                        for (int j = 0; j < list.size(); j++) {
-                                            final DefaultMutableTreeNode curr = list.get(j);
+                                        for (final DefaultMutableTreeNode current : list) {
                                             if (next == null) {
-                                                next = curr;
+                                                next = current;
                                             } else {
-                                                final Geocache gNext =
+                                                final Geocache nextGeocache =
                                                         (Geocache) next.getUserObject();
-                                                final Geocache gCurr =
-                                                        (Geocache) curr.getUserObject();
+                                                final Geocache currentGeocache =
+                                                        (Geocache) current.getUserObject();
 
-                                                GeocacheLog logNext = null;
-                                                for (final GeocacheLog log : gNext.getLogs()) {
+                                                GeocacheLog nextLog = null;
+                                                for (final GeocacheLog log :
+                                                        nextGeocache.getLogs()) {
                                                     if (log.isAuthor(gcUsername)
                                                             && log.isFoundLog()) {
-                                                        logNext = log;
+                                                        nextLog = log;
                                                         break;
                                                     }
                                                 }
 
-                                                GeocacheLog logCurr = null;
-                                                for (final GeocacheLog log : gCurr.getLogs()) {
+                                                GeocacheLog currentLog = null;
+                                                for (final GeocacheLog log :
+                                                        currentGeocache.getLogs()) {
                                                     if (log.isAuthor(gcUsername)
                                                             && log.isFoundLog()) {
-                                                        logCurr = log;
+                                                        currentLog = log;
                                                         break;
                                                     }
                                                 }
 
-                                                if (logCurr == null) {
+                                                if (currentLog == null) {
                                                     continue;
                                                 }
-                                                if (logNext == null) {
-                                                    next = curr;
+                                                if (nextLog == null) {
+                                                    next = current;
                                                     continue;
                                                 }
 
-                                                if (logCurr.getDate().isAfter(logNext.getDate())) {
-                                                    next = curr;
+                                                if (currentLog
+                                                        .getDate()
+                                                        .isAfter(nextLog.getDate())) {
+                                                    next = current;
                                                 }
                                             }
                                         }
@@ -355,7 +362,7 @@ public class DuplicateDialog extends JFrame {
                                         sortedList.add(next);
                                     }
 
-                                    // add entrys
+                                    // Add entries.
                                     for (int i = 0; i < sortedList.size(); i++) {
                                         rootNode.insert(sortedList.get(i), i);
                                     }
@@ -368,12 +375,12 @@ public class DuplicateDialog extends JFrame {
                                     if (tree.getRowCount() == 0) {
                                         tree.setVisible(false);
                                     }
-                                } catch (Throwable e1) {
+                                } catch (Throwable throwable) {
                                     // Since Thread.stop() is used, the threads will most likely
                                     // complain in weird ways. We do not care about these
                                     // exceptions.
                                     if (!stopBackgroundThread.get()) {
-                                        ExceptionPanel.showErrorDialog(THIS, e1);
+                                        ExceptionPanel.showErrorDialog(THIS, throwable);
                                     }
                                     THIS.setVisible(false);
                                 }
@@ -383,7 +390,7 @@ public class DuplicateDialog extends JFrame {
     }
 
     private void switchCards() {
-        final CardLayout cl = (CardLayout) (contentPanel.getLayout());
-        cl.show(contentPanel, "2");
+        final CardLayout cardLayout = (CardLayout) (contentPanel.getLayout());
+        cardLayout.show(contentPanel, "2");
     }
 }

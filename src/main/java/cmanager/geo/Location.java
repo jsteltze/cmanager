@@ -6,8 +6,8 @@ public class Location extends Coordinate {
 
     private String name;
 
-    public Location(String name, double lat, double lon) throws Exception {
-        super(lat, lon);
+    public Location(String name, double latitude, double longitude) throws Exception {
+        super(latitude, longitude);
         setName(name);
     }
 

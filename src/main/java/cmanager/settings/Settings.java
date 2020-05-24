@@ -11,7 +11,7 @@ import org.apache.commons.codec.binary.Base64;
 
 public class Settings {
 
-    private static Preferences prefs = Preferences.userRoot().node(Constants.APP_NAME);
+    private static final Preferences prefs = Preferences.userRoot().node(Constants.APP_NAME);
 
     public enum Key {
         HEAP_SIZE,
@@ -52,7 +52,7 @@ public class Settings {
         }
     }
 
-    public static String defaultS(Key key) {
+    public static String getDefaultString(Key key) {
         switch (key) {
             case GC_USERNAME:
             case FILE_CHOOSER_LOAD_GPX:
@@ -67,14 +67,14 @@ public class Settings {
         prefs.put(key(key), val);
     }
 
-    public static String getS(Key key) {
-        return prefs.get(key(key), defaultS(key));
+    public static String getString(Key key) {
+        return prefs.get(key(key), getDefaultString(key));
     }
 
-    public static void setSerialized(Key key, Serializable val) throws IOException {
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        FileHelper.serialize(val, bos);
-        final byte[] bytes = bos.toByteArray();
+    public static void setSerialized(Key key, Serializable value) throws IOException {
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        FileHelper.serialize(value, byteArrayOutputStream);
+        final byte[] bytes = byteArrayOutputStream.toByteArray();
 
         final String base64 = Base64.encodeBase64String(bytes);
         Settings.set(key, base64);
@@ -82,13 +82,14 @@ public class Settings {
 
     public static <T extends Serializable> T getSerialized(Key key)
             throws ClassNotFoundException, IOException {
-        final String base64 = Settings.getS(key);
+        final String base64 = Settings.getString(key);
 
         if (base64 == null) {
             return null;
         }
 
-        ByteArrayInputStream bis = new ByteArrayInputStream(Base64.decodeBase64(base64));
-        return FileHelper.deserialize(bis);
+        ByteArrayInputStream byteArrayInputStream =
+                new ByteArrayInputStream(Base64.decodeBase64(base64));
+        return FileHelper.deserialize(byteArrayInputStream);
     }
 }

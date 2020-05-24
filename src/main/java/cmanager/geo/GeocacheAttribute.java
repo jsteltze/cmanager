@@ -6,29 +6,29 @@ public class GeocacheAttribute implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    private int ID;
-    private int inc;
-    private String desc;
+    private final int id;
+    private final int inc; // 1 = positive, 0 = negative.
+    private final String description;
 
-    public GeocacheAttribute(int ID, int inc, String desc) {
-        if (desc == null) {
+    public GeocacheAttribute(int id, int inc, String description) {
+        if (description == null) {
             throw new IllegalArgumentException();
         }
 
-        this.ID = ID;
+        this.id = id;
         this.inc = inc;
-        this.desc = desc;
+        this.description = description;
     }
 
-    public int getID() {
-        return ID;
+    public int getId() {
+        return id;
     }
 
     public int getInc() {
         return inc;
     }
 
-    public String getDesc() {
-        return desc;
+    public String getDescription() {
+        return description;
     }
 }

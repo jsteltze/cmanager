@@ -1,57 +1,79 @@
 package cmanager.geo;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import cmanager.geo.Coordinate.UnparsableException;
-import org.junit.Test;
+import java.util.Arrays;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
+/** Tests for the coordinate container. */
 public class CoordinateTest {
 
+    /** Test the instantiation of the class using the different constructors. */
     @Test
-    public void test() {
-        final Coordinate c1 = new Coordinate("1.23", "4.56");
-        assertEquals(1.23, c1.getLat(), 0.0);
-        assertEquals(4.56, c1.getLon(), 0.0);
+    @DisplayName("Test coordinate constructor")
+    public void testCreation() {
+        final Coordinate coordinate1 = new Coordinate("1.23", "4.56");
+        assertEquals(1.23, coordinate1.getLatitude(), 0.0);
+        assertEquals(4.56, coordinate1.getLongitude(), 0.0);
 
-        final Coordinate c2 = new Coordinate(1.23, 4.56);
-        assertEquals(1.23, c2.getLat(), 0.0);
-        assertEquals(4.56, c2.getLon(), 0.0);
-        assertEquals("1.23, 4.56", c2.toString());
+        final Coordinate coordinate2 = new Coordinate(1.23, 4.56);
+        assertEquals(1.23, coordinate2.getLatitude(), 0.0);
+        assertEquals(4.56, coordinate2.getLongitude(), 0.0);
+        assertEquals("1.23, 4.56", coordinate2.toString());
 
-        assertTrue(c1.equals(c2));
-        assertEquals(0, c1.distanceHaversine(c2), 0);
+        assertTrue(coordinate1.equals(coordinate2)); // assertEquals will fail.
+        assertEquals(0, coordinate1.distanceHaversine(coordinate2), 0);
 
-        final Coordinate c3 = new Coordinate(1.23, 4.567);
-        assertFalse(c1.equals(c3));
-        assertEquals(778.1851, c1.distanceHaversine(c3), 0.00009);
-        assertEquals(778.185, c1.distanceHaversineRounded(c3), 0);
+        final Coordinate coordinate3 = new Coordinate(1.23, 4.567);
+        assertFalse(coordinate1.equals(coordinate3)); // assertEquals will fail.
+        assertEquals(778.1851, coordinate1.distanceHaversine(coordinate3), 0.00009);
+        assertEquals(778.185, coordinate1.distanceHaversineRounded(coordinate3), 0);
     }
 
+    /** Test the distance calculation. */
     @Test
+    @DisplayName("Test distance calculation")
     public void testDistance() {
-        final Coordinate c1 = new Coordinate(53.09780, 8.74908);
-        final Coordinate c2 = new Coordinate(53.05735, 8.59148);
-        assertEquals(11448.0325, c1.distanceHaversine(c2), 0.0009);
+        final Coordinate coordinate1 = new Coordinate(53.09780, 8.74908);
+        final Coordinate coordinate2 = new Coordinate(53.05735, 8.59148);
+        assertEquals(11448.0325, coordinate1.distanceHaversine(coordinate2), 0.0009);
     }
 
-    private void parse(String string, double lat, double lon) {
+    /**
+     * Test the parser using the given coordinate string and the expected coordinate values.
+     *
+     * @param string The coordinate to parse as a string.
+     * @param latitude The expected latitude of the coordinate.
+     * @param lonigtude The expected longitude of the coordinate.
+     */
+    private void parse(String string, double latitude, double lonigtude) {
         try {
-            final Coordinate c = new Coordinate(string);
-            assertEquals(lat, c.getLat(), 0.0);
-            assertEquals(lon, c.getLon(), 0.00009);
-        } catch (UnparsableException e) {
-            fail(e.getStackTrace().toString());
+            final Coordinate coordinate = new Coordinate(string);
+            assertEquals(latitude, coordinate.getLatitude(), 0.0);
+            assertEquals(lonigtude, coordinate.getLongitude(), 0.00009);
+        } catch (UnparsableException exception) {
+            fail(Arrays.toString(exception.getStackTrace()));
         }
     }
 
+    /**
+     * Test the parser using the given coordinate string. This will expect the coordinate to be
+     * 53.1073, 8.12945.
+     *
+     * @param string The coordinate to parse as a string.
+     */
     private void parse(String string) {
         parse(string, 53.1073, 8.12945);
     }
 
+    /** Test parsing differently formatted coordinates. */
     @Test
+    @DisplayName("Test parsing different input formatting")
     public void testParsing() {
         parse(" N 53° 06.438' E 008° 07.767' (WGS84)");
         parse("  N53° 06.438' E 008° 07.767' (WGS84)");

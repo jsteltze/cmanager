@@ -10,7 +10,7 @@ public class CacheListFilterCacheName extends CacheListFilterModel {
 
     public CacheListFilterCacheName() {
         super(FILTER_TYPE.SINGLE_FILTER_VALUE);
-        lblLeft2.setText("Cachename contains: ");
+        labelLeft2.setText("Cachename contains: ");
         runDoModelUpdateNow =
                 new Runnable() {
                     @Override
@@ -21,7 +21,7 @@ public class CacheListFilterCacheName extends CacheListFilterModel {
     }
 
     @Override
-    protected boolean isGood(Geocache g) {
-        return g.getName().toLowerCase().contains(filterString);
+    protected boolean isGood(Geocache geocache) {
+        return geocache.getName().toLowerCase().contains(filterString);
     }
 }

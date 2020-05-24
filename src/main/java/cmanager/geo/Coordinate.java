@@ -10,15 +10,15 @@ public class Coordinate implements Serializable {
 
     private static final long serialVersionUID = -2526305963690482539L;
 
-    public class UnparsableException extends Exception {
+    public static class UnparsableException extends Exception {
         private static final long serialVersionUID = -3199033370349089535L;
     }
 
-    private double lat;
-    private double lon;
+    private final double latitude;
+    private final double longitude;
 
-    public Coordinate(String lat, String lon) {
-        this(Double.valueOf(lat), Double.valueOf(lon));
+    public Coordinate(String latitude, String longitude) {
+        this(Double.parseDouble(latitude), Double.parseDouble(longitude));
     }
 
     public Coordinate(String input) throws UnparsableException {
@@ -32,45 +32,46 @@ public class Coordinate implements Serializable {
             throw new UnparsableException();
         }
 
-        lat = Double.valueOf(matcher.group(1)) + Double.valueOf(matcher.group(2)) / 60;
-        lon = Double.valueOf(matcher.group(3)) + Double.valueOf(matcher.group(4)) / 60;
+        latitude = Double.parseDouble(matcher.group(1)) + Double.parseDouble(matcher.group(2)) / 60;
+        longitude =
+                Double.parseDouble(matcher.group(3)) + Double.parseDouble(matcher.group(4)) / 60;
 
         if (matcher.find()) {
             throw new UnparsableException();
         }
     }
 
-    public Coordinate(double lat, double lon) {
-        this.lat = lat;
-        this.lon = lon;
+    public Coordinate(double latitude, double longitude) {
+        this.latitude = latitude;
+        this.longitude = longitude;
     }
 
-    public Double getLat() {
-        return lat;
+    public Double getLatitude() {
+        return latitude;
     }
 
-    public Double getLon() {
-        return lon;
+    public Double getLongitude() {
+        return longitude;
     }
 
-    public boolean equals(Coordinate c) {
-        return lat == c.getLat() && lon == c.getLon();
+    public boolean equals(Coordinate coordinate) {
+        return latitude == coordinate.getLatitude() && longitude == coordinate.getLongitude();
     }
 
     public String toString() {
-        return Double.valueOf(lat).toString() + ", " + Double.valueOf(lon).toString();
+        return Double.valueOf(latitude).toString() + ", " + Double.valueOf(longitude).toString();
     }
 
     public double distanceHaversine(Coordinate other) {
-        // "haversine" distance
+        // "Haversine" distance.
         // http://www.movable-type.co.uk/scripts/latlong.html
 
         final double radianFactor = 2 * Math.PI / 360;
 
-        final double phi1 = lat * radianFactor;
-        final double phi2 = other.lat * radianFactor;
-        final double deltaPhi = (other.lat - lat) * radianFactor;
-        final double deltaLambda = (other.lon - lon) * radianFactor;
+        final double phi1 = latitude * radianFactor;
+        final double phi2 = other.latitude * radianFactor;
+        final double deltaPhi = (other.latitude - latitude) * radianFactor;
+        final double deltaLambda = (other.longitude - longitude) * radianFactor;
 
         final double a =
                 Math.sin(deltaPhi / 2) * Math.sin(deltaPhi / 2)
@@ -93,8 +94,8 @@ public class Coordinate implements Serializable {
             throw new IllegalArgumentException();
         }
 
-        BigDecimal bd = BigDecimal.valueOf(value);
-        bd = bd.setScale(places, RoundingMode.HALF_UP);
-        return bd.doubleValue();
+        BigDecimal bigDecimal = BigDecimal.valueOf(value);
+        bigDecimal = bigDecimal.setScale(places, RoundingMode.HALF_UP);
+        return bigDecimal.doubleValue();
     }
 }

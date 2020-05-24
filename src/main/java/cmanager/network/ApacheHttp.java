@@ -4,6 +4,7 @@ import cmanager.global.Constants;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import org.apache.http.HttpHeaders;
 import org.apache.http.NameValuePair;
@@ -14,11 +15,12 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 
-public class ApacheHTTP {
+public class ApacheHttp {
 
-    private CloseableHttpClient httpClient = HttpClients.createDefault();
+    private final CloseableHttpClient httpClient = HttpClients.createDefault();
 
-    public class HttpResponse {
+    public static class HttpResponse {
+
         private final Integer statusCode;
         private final String body;
 
@@ -42,20 +44,21 @@ public class ApacheHTTP {
         httpGet.setHeader(HttpHeaders.USER_AGENT, Constants.HTTP_USER_AGENT);
         final CloseableHttpResponse response = httpClient.execute(httpGet);
 
-        Integer statusCode = null;
-        final StringBuffer http = new StringBuffer();
+        int statusCode;
+        final StringBuilder http = new StringBuilder();
         try {
             statusCode = response.getStatusLine().getStatusCode();
 
-            BufferedReader in =
+            BufferedReader bufferedReader =
                     new BufferedReader(
-                            new InputStreamReader(response.getEntity().getContent(), "UTF8"));
+                            new InputStreamReader(
+                                    response.getEntity().getContent(), StandardCharsets.UTF_8));
 
             String inputLine;
-            while ((inputLine = in.readLine()) != null) {
+            while ((inputLine = bufferedReader.readLine()) != null) {
                 http.append(inputLine);
             }
-            in.close();
+            bufferedReader.close();
         } finally {
             response.close();
         }
@@ -63,27 +66,27 @@ public class ApacheHTTP {
     }
 
     // HTTP POST request
-    public HttpResponse post(String url, List<NameValuePair> nvps)
-            throws UnexpectedStatusCode, IOException {
+    public HttpResponse post(String url, List<NameValuePair> nvps) throws IOException {
         final HttpPost httpPost = new HttpPost(url);
         httpPost.setHeader(HttpHeaders.USER_AGENT, Constants.HTTP_USER_AGENT);
         httpPost.setEntity(new UrlEncodedFormEntity(nvps, "UTF-8"));
         final CloseableHttpResponse response = httpClient.execute(httpPost);
 
-        Integer statusCode = null;
-        final StringBuffer http = new StringBuffer();
+        int statusCode;
+        final StringBuilder http = new StringBuilder();
         try {
             statusCode = response.getStatusLine().getStatusCode();
 
-            BufferedReader in =
+            BufferedReader bufferedReader =
                     new BufferedReader(
-                            new InputStreamReader(response.getEntity().getContent(), "UTF8"));
+                            new InputStreamReader(
+                                    response.getEntity().getContent(), StandardCharsets.UTF_8));
 
             String inputLine;
-            while ((inputLine = in.readLine()) != null) {
+            while ((inputLine = bufferedReader.readLine()) != null) {
                 http.append(inputLine);
             }
-            in.close();
+            bufferedReader.close();
         } finally {
             response.close();
         }
