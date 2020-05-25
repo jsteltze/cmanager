@@ -9,7 +9,7 @@ Further information in German:
 
 ## License & Source Code
 
-`cmanager` is distributed under the terms of [The GNU General Public License v3](http://www.gnu.org/licenses/gpl-3.0-standalone.html). The sources are available on GitHub ([link](https://github.com/FriedrichFroebel/cmanager)).
+`cmanager` is distributed under the terms of [The GNU General Public License v3](http://www.gnu.org/licenses/gpl-3.0-standalone.html). The sources are available [on GitHub](https://github.com/FriedrichFroebel/cmanager).
 
 This version is a fork of the [original repository by Samsung1](https://github.com/RoffelKartoffel/cmanager). While the original version discontinued support for the log transfer functionality itself, this fork tries to keep it working. Additionally some problems of the original version have been fixed. Please note that I do not have any plans on implementing completely new features at the moment, but feel free to open a pull request.
 
@@ -17,7 +17,7 @@ This version is a fork of the [original repository by Samsung1](https://github.c
 
 Releases are published on GitHub as ["Releases"](https://github.com/FriedrichFroebel/cmanager/releases).
 
-Besides the regular release, there is a pre-release as well. This will be built by Travis CI on every change to the `master` branch. **Please note that these files (named `cm-ci.jar`) are development versions which might have additional bugs or provide undocumented changes/features. Use them at your own risk!** The Travis integration is still work-in-progress, see [#7](https://github.com/FriedrichFroebel/cmanager/issues/7) for example.
+Besides the regular release, there is a pre-release as well. This will be built by Travis CI on every change to the `master` branch. **Please note that these files (named `cm-<hexStringOfTheCommit>.jar`) are development versions which might have additional bugs or provide undocumented changes/features. Use them at your own risk!** The Travis integration is still work-in-progress, see [#7](https://github.com/FriedrichFroebel/cmanager/issues/7) for example.
 
 ## Building from Source
 
@@ -65,3 +65,40 @@ Run `java -jar cm-0.4.0.jar` from the directory containing the JAR file.
 ### Starting the Java-independent package
 
 Double-click on `cmanager.exe` (on Windows) from the directory containing this package. *Please note that this version is not being distributed in the release section at the moment.*
+
+## Contributing
+
+### Reporting Problems
+
+Problems can be reported in either English or German, where the former is recommended on GitHub. Please provide the following details within the report:
+
+* The used version of the application and where you got it from.
+* The used operating system.
+* The used Java version.
+* The steps needed to reproduce this problem. If possible add a (minimal) GPX file (alternatively a pair of cache codes) to make it easier to investigate (you might remove personal information from the GPX file if you like).
+* The error you get or the problem you have.
+
+### Requesting Features
+
+Feel free to request features, but please note that I do not have any plans on implementing completely new features at the moment. You may send a pull request if you have implemented an interesting feature.
+
+### Pull Requests
+
+Feel free to open a pull request to fix a problem yourself or to contribute a new feature. See the list of issues for possible changes. Please indicate your work on an issue by commenting on it.
+
+The code should satisfy the following requirements:
+
+* Everything should be written in English.
+* The code style is based on the one of the Android Open Source project. The most important rules:
+
+  * Use UTF-8 encoding.
+  * Indent using 4 spaces.
+  * Names should be in camelCase, `static final` variables should use UPPER_CASE, class names should be PascalCase.
+  * Make as much variables `final` as possible.
+  * Try to avoid abbreviated names for better readability.
+
+  You may use the `googleJavaFormatter` (`goJF`) task to let the corresponding Gradle plugin do most of the work for you.
+
+* Document your code.
+* Provide dedicated tests if it makes sense.
+* Try to avoid adding additional dependencies.
