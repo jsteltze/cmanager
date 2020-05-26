@@ -23,6 +23,7 @@ jobs:
 script:
   - chmod +x gradlew
   - ./gradlew clean
+  - ./gradlew verifyGoogleJavaFormat
   - ./gradlew jar
 
 # Our global environment variables used as a replacement for providing an `oc_okapi.properties`

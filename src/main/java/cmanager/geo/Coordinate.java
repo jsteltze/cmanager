@@ -12,6 +12,8 @@ public class Coordinate implements Serializable {
 
     public static class UnparsableException extends Exception {
         private static final long serialVersionUID = -3199033370349089535L;
+
+        public UnparsableException() {}
     }
 
     private final double latitude;

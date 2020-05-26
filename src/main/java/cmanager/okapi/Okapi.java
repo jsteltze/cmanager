@@ -14,12 +14,11 @@ import cmanager.okapi.responses.CacheDocument;
 import cmanager.okapi.responses.CachesAroundDocument;
 import cmanager.okapi.responses.ErrorDocument;
 import cmanager.okapi.responses.FoundStatusDocument;
+import cmanager.okapi.responses.HomeLocationDocument;
 import cmanager.okapi.responses.LogSubmissionDocument;
 import cmanager.okapi.responses.UnexpectedLogStatus;
 import cmanager.okapi.responses.UsernameDocument;
 import cmanager.okapi.responses.UuidDocument;
-import cmanager.xml.Element;
-import cmanager.xml.Parser;
 import com.github.scribejava.core.builder.ServiceBuilder;
 import com.github.scribejava.core.model.OAuth1AccessToken;
 import com.github.scribejava.core.model.OAuth1RequestToken;
@@ -54,19 +53,19 @@ public class Okapi {
                         + URLEncoder.encode(username, "UTF-8")
                         + "&fields=uuid";
 
-        final HttpResponse response = httpClient.get(url);
-        final String http = response.getBody();
+        final HttpResponse httpResponse = httpClient.get(url);
+        final String responseBody = httpResponse.getBody();
 
-        if (response.getStatusCode() != 200) {
-            final ErrorDocument okapiError = new Gson().fromJson(http, ErrorDocument.class);
+        if (httpResponse.getStatusCode() != 200) {
+            final ErrorDocument okapiError = new Gson().fromJson(responseBody, ErrorDocument.class);
             if (okapiError.getParameter().equals("username")) {
                 return null;
             } else {
-                throw new UnexpectedStatusCode(response.getStatusCode(), http);
+                throw new UnexpectedStatusCode(httpResponse.getStatusCode(), responseBody);
             }
         }
 
-        final UuidDocument document = new Gson().fromJson(http, UuidDocument.class);
+        final UuidDocument document = new Gson().fromJson(responseBody, UuidDocument.class);
         return document.getUuid();
     }
 
@@ -83,19 +82,19 @@ public class Okapi {
                                 "code|name|location|type|gc_code|difficulty|terrain|status",
                                 "UTF-8");
 
-        final HttpResponse response = httpClient.get(url);
-        final String http = response.getBody();
+        final HttpResponse httpResponse = httpClient.get(url);
+        final String responseBody = httpResponse.getBody();
 
-        if (response.getStatusCode() != 200) {
-            final ErrorDocument okapiError = new Gson().fromJson(http, ErrorDocument.class);
+        if (httpResponse.getStatusCode() != 200) {
+            final ErrorDocument okapiError = new Gson().fromJson(responseBody, ErrorDocument.class);
             if (okapiError.getParameter().equals("cache_code")) {
                 return null;
             } else {
-                throw new UnexpectedStatusCode(response.getStatusCode(), http);
+                throw new UnexpectedStatusCode(httpResponse.getStatusCode(), responseBody);
             }
         }
 
-        final CacheDocument document = new Gson().fromJson(http, CacheDocument.class);
+        final CacheDocument document = new Gson().fromJson(responseBody, CacheDocument.class);
         if (document == null) {
             return null;
         }
@@ -169,25 +168,26 @@ public class Okapi {
                                 "size2|short_description|description|owner|hint2|req_passwd",
                                 "UTF-8");
 
-        final HttpResponse response = httpClient.get(url);
-        final String http = response.getBody();
+        final HttpResponse httpResponse = httpClient.get(url);
+        final String responseBody = httpResponse.getBody();
 
-        if (response.getStatusCode() != 200) {
-            final ErrorDocument okapiError = new Gson().fromJson(http, ErrorDocument.class);
+        if (httpResponse.getStatusCode() != 200) {
+            final ErrorDocument okapiError = new Gson().fromJson(responseBody, ErrorDocument.class);
             if (okapiError.getParameter().equals("cache_code")) {
                 return null;
             } else {
-                throw new UnexpectedStatusCode(response.getStatusCode(), http);
+                throw new UnexpectedStatusCode(httpResponse.getStatusCode(), responseBody);
             }
         }
 
-        final CacheDetailsDocument document = new Gson().fromJson(http, CacheDetailsDocument.class);
+        final CacheDetailsDocument document =
+                new Gson().fromJson(responseBody, CacheDetailsDocument.class);
 
-        geocache.setContainer(document.getSize2());
-        geocache.setListingShort(document.getShort_description());
+        geocache.setContainer(document.getSize());
+        geocache.setListingShort(document.getShortDescription());
         geocache.setListing(document.getDescription());
         geocache.setOwner(document.getOwnerUsername());
-        geocache.setHint(document.getHint2());
+        geocache.setHint(document.getHint());
         geocache.setRequiresPassword(document.doesRequirePassword());
 
         return geocache;
@@ -281,19 +281,20 @@ public class Okapi {
                         + (useOAuth ? "&ignored_status=notignored_only" : "")
                         + (useOAuth ? "&not_found_by=" + excludeUuid : "");
 
-        String http;
+        String responseBody;
         if (useOAuth) {
-            http = authedHttpGet(tokenProvider, url);
+            responseBody = authedHttpGet(tokenProvider, url);
         } else {
-            final HttpResponse response = httpClient.get(url);
-            http = response.getBody();
+            final HttpResponse httpResponse = httpClient.get(url);
+            responseBody = httpResponse.getBody();
 
-            if (response.getStatusCode() != 200) {
-                throw new UnexpectedStatusCode(response.getStatusCode(), http);
+            if (httpResponse.getStatusCode() != 200) {
+                throw new UnexpectedStatusCode(httpResponse.getStatusCode(), responseBody);
             }
         }
 
-        final CachesAroundDocument document = new Gson().fromJson(http, CachesAroundDocument.class);
+        final CachesAroundDocument document =
+                new Gson().fromJson(responseBody, CachesAroundDocument.class);
         if (document == null) {
             return null;
         }
@@ -326,18 +327,20 @@ public class Okapi {
                         + "&cache_code="
                         + oc.getCode()
                         + "&fields=is_found";
-        final String http = authedHttpGet(tokenProvider, url);
+        final String responseBody = authedHttpGet(tokenProvider, url);
 
-        final FoundStatusDocument document = new Gson().fromJson(http, FoundStatusDocument.class);
+        final FoundStatusDocument document =
+                new Gson().fromJson(responseBody, FoundStatusDocument.class);
+
         oc.setIsFound(document.isFound());
     }
 
     public static String getUuid(TokenProviderI tokenProvider)
             throws IOException, InterruptedException, ExecutionException {
         final String url = BASE_URL + "/users/user" + "?fields=uuid";
-        final String http = authedHttpGet(tokenProvider, url);
+        final String responseBody = authedHttpGet(tokenProvider, url);
 
-        final UuidDocument document = new Gson().fromJson(http, UuidDocument.class);
+        final UuidDocument document = new Gson().fromJson(responseBody, UuidDocument.class);
         if (document == null) {
             return null;
         }
@@ -347,22 +350,21 @@ public class Okapi {
     public static String getUsername(TokenProviderI tokenProvider)
             throws IOException, InterruptedException, ExecutionException {
         final String url = BASE_URL + "/users/user" + "?fields=username";
-        final String http = authedHttpGet(tokenProvider, url);
+        final String responseBody = authedHttpGet(tokenProvider, url);
 
-        final UsernameDocument document = new Gson().fromJson(http, UsernameDocument.class);
+        final UsernameDocument document = new Gson().fromJson(responseBody, UsernameDocument.class);
         if (document == null) {
             return null;
         }
         return document.getUsername();
     }
 
-    public static void postLog(TokenProviderI tp, Geocache cache, GeocacheLog log)
+    public static void postLog(TokenProviderI tokenProvider, Geocache cache, GeocacheLog log)
             throws InterruptedException, ExecutionException, IOException, UnexpectedLogStatus {
         String url =
                 BASE_URL
                         + "/logs/submit"
-                        + "?format=json"
-                        + "&cache_code="
+                        + "?cache_code="
                         + URLEncoder.encode(cache.getCode(), "UTF-8")
                         + "&logtype="
                         + URLEncoder.encode(log.getOkapiType(cache), "UTF-8")
@@ -375,20 +377,11 @@ public class Okapi {
             url += "&password=" + URLEncoder.encode(log.getPassword(), "UTF-8");
         }*/
 
-        // System.out.println(url);
+        final String responseBody = authedHttpGet(tokenProvider, url);
 
-        final String response = authedHttpGet(tp, url);
-
-        // TODO: We might want to handle another problem here as well, although this should not be
-        // this common.
-        // Currently this is done by catching the NPE below
-        // {"error":{"developer_message":"Parameter 'logtype' has invalid value: 'Webcam Photo
-        // Taken' in not a valid logtype
-        // code.","reason_stack":["bad_request","invalid_parameter"],"status":400,"parameter":"logtype","whats_wrong_about_it":"'Webcam Photo Taken' in not a valid logtype code.","more_info":"https:\/\/www.opencaching.de\/okapi\/introduction.html#errors"}}
-
-        // Retrieve the response document.
+        // Retrieve the responseBody document.
         final LogSubmissionDocument document =
-                new Gson().fromJson(response, LogSubmissionDocument.class);
+                new Gson().fromJson(responseBody, LogSubmissionDocument.class);
 
         // The document itself is null.
         if (document == null) {
@@ -396,41 +389,28 @@ public class Okapi {
                     "Problems with handling posted log. Response document is null.");
         }
 
+        if (document.isSuccess() == null) {
+            throw new NullPointerException(responseBody);
+        }
+
         // Check success status.
-        try {
-            if (!document.isSuccess()) {
-                throw new UnexpectedLogStatus(document.getMessage());
-            }
-        } catch (NullPointerException exception) {
-            // When the OKAPI reports a request error, this will lead to a NPE.
-            System.out.println(response);
-            throw new NullPointerException(
-                    "Could not submit log. Please open an issue for this and add the terminal output to it.");
+        if (!document.isSuccess()) {
+            throw new UnexpectedLogStatus(document.getMessage());
         }
     }
 
-    public static Coordinate getHomeCoordinates(TokenProviderI tp)
-            throws MalFormedException, IOException, InterruptedException, ExecutionException {
-        final String uuid = getUuid(tp);
+    public static Coordinate getHomeCoordinates(TokenProviderI tokenProvider)
+            throws Coordinate.UnparsableException, IOException, InterruptedException,
+                    ExecutionException {
+        final String uuid = getUuid(tokenProvider);
 
         final String url =
-                BASE_URL
-                        + "/users/user"
-                        + "?format=xmlmap2"
-                        + "&fields=home_location"
-                        + "&user_uuid="
-                        + uuid;
-        final String http = authedHttpGet(tp, url);
+                BASE_URL + "/users/user" + "?fields=home_location" + "&user_uuid=" + uuid;
+        final String responseBody = authedHttpGet(tokenProvider, url);
 
-        // <object><string key="home_location">53.047117|9.608</string></object>
-        final Element root = Parser.parse(http);
-        for (final Element element : root.getChild("object").getChildren()) {
-            if (element.attrIs("key", "home_location")) {
-                final String[] parts = element.getUnescapedBody().split("\\|");
-                return new Coordinate(parts[0], parts[1]);
-            }
-        }
+        final HomeLocationDocument document =
+                new Gson().fromJson(responseBody, HomeLocationDocument.class);
 
-        return null;
+        return document.getHomeLocationAsCoordinate();
     }
 }
