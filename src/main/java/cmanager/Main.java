@@ -6,6 +6,7 @@ import cmanager.gui.MainWindow;
 import cmanager.util.ForkUtil;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
+import javax.swing.UIManager;
 
 public class Main {
 
@@ -14,6 +15,8 @@ public class Main {
 
         try {
             ForkUtil.forkWithRezeidHeapAndExit(arguments);
+            
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Throwable throwable) {
             throwable.printStackTrace();
         }

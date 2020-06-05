@@ -58,7 +58,8 @@ public class Util {
                             if (stopBackgroundThread.get()) return null;
 
                             try {
-                                outputInterface.setProgress(
+                                if (outputInterface != null) 
+                                    outputInterface.setProgress(
                                         count.get(), cacheListModel.getList().size());
                                 count.getAndIncrement();
 
@@ -97,7 +98,8 @@ public class Util {
                                 for (final Geocache opencache : similar) {
                                     if (GeocacheComparator.similar(opencache, geocache)) {
                                         Okapi.completeCacheDetails(opencache);
-                                        outputInterface.match(geocache, opencache);
+                                        if (outputInterface != null)
+                                            outputInterface.match(geocache, opencache);
                                         match = true;
                                     }
                                 }
@@ -123,7 +125,8 @@ public class Util {
             throw throwable.get();
         }
 
-        outputInterface.setProgress(
+        if (outputInterface != null)
+            outputInterface.setProgress(
                 cacheListModel.getList().size(), cacheListModel.getList().size());
     }
 
