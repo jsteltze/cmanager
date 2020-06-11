@@ -25,7 +25,11 @@ public class Settings {
 
         LOCATION_LIST,
 
-        CLC_LIST
+        CLC_LIST,
+        
+        PROXY_HOST,
+        PROXY_PORT,
+        CHECK_UPDATES
     }
 
     public static String key(Key key) {
@@ -46,6 +50,12 @@ public class Settings {
                 return "locationList";
             case CLC_LIST:
                 return "clcList";
+            case PROXY_HOST:
+                return "proxyHost";
+            case PROXY_PORT:
+                return "proxyPort";
+            case CHECK_UPDATES:
+                return "checkUpdates";
 
             default:
                 return null;

@@ -7,16 +7,21 @@ import cmanager.settings.Settings;
 import cmanager.util.DesktopUtil;
 import cmanager.util.ForkUtil;
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.GridLayout;
+import java.awt.Image;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.Box;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -24,7 +29,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
-import javax.swing.SpringLayout;
 import javax.swing.SwingConstants;
 import javax.swing.border.EmptyBorder;
 
@@ -36,15 +40,18 @@ public class SettingsDialog extends JDialog {
     private final JLabel labelOkapiToken;
     private final JLabel labelUsernameOc;
     private final JButton buttonRequestNewToken;
-    private final JTextField textUsernameGc;
+    private final JTextField textUsernameGc = new JTextField(30);
     private final JTextField textHeapSize;
+    private final JTextField textProxyHost = new JTextField();
+    private final JTextField textProxyPort = new JTextField(4);
+    private final JCheckBox checkUpdates = new JCheckBox("Check for Updates when Starting", true);
 
     /** Create the frame. */
     public SettingsDialog(JFrame owner) {
         super(owner);
 
         setTitle("Settings");
-        setBounds(100, 100, 450, 300);
+
         final JPanel contentPane = new JPanel();
         contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
         setContentPane(contentPane);
@@ -66,9 +73,16 @@ public class SettingsDialog extends JDialog {
                                 || (oldHeapSize == null && newHeapSize.length() > 0)) {
                             changesWhichNeedRestart = true;
                         }
+                        
+                        final String newProxyHost = textProxyHost.getText();
+                        final String newProxyPort = textProxyPort.getText();
+                        final boolean checkUpdate = checkUpdates.isSelected();
 
                         Settings.set(Settings.Key.GC_USERNAME, textUsernameGc.getText());
                         Settings.set(Settings.Key.HEAP_SIZE, newHeapSize);
+                        Settings.set(Settings.Key.PROXY_HOST, newProxyHost);
+                        Settings.set(Settings.Key.PROXY_PORT, newProxyPort);
+                        Settings.set(Settings.Key.CHECK_UPDATES, checkUpdate ? "y" : "n");
 
                         if (changesWhichNeedRestart) {
                             final String message =
@@ -108,31 +122,22 @@ public class SettingsDialog extends JDialog {
         final JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
         contentPane.add(tabbedPane, BorderLayout.CENTER);
 
-        final JPanel panelOc = new JPanel();
+        final JPanel panelOc = new JPanel(new BorderLayout());
+        final JPanel panelOcInner = new JPanel(new GridLayout(3, 2));
+        panelOcInner.setBackground(Color.white);
         panelOc.setBorder(new EmptyBorder(10, 10, 10, 10));
         tabbedPane.addTab("opencaching.de", null, panelOc, null);
-        final SpringLayout springLayoutPanelOc = new SpringLayout();
-        panelOc.setLayout(springLayoutPanelOc);
+        panelOc.setBackground(Color.white);
+        panelOc.add(panelOcInner, BorderLayout.NORTH);
 
-        final JLabel labelOkapiTokenText = new JLabel("OKAPI Token:");
-        springLayoutPanelOc.putConstraint(
-                SpringLayout.NORTH, labelOkapiTokenText, 40, SpringLayout.NORTH, panelOc);
-        springLayoutPanelOc.putConstraint(
-                SpringLayout.WEST, labelOkapiTokenText, 10, SpringLayout.WEST, panelOc);
-        panelOc.add(labelOkapiTokenText);
+        final JLabel labelOkapiTokenText = new JLabel("OKAPI Token:   ", JLabel.RIGHT);
+        panelOcInner.add(labelOkapiTokenText);
 
         labelOkapiToken = new JLabel("New label");
-        springLayoutPanelOc.putConstraint(
-                SpringLayout.NORTH, labelOkapiToken, 0, SpringLayout.NORTH, labelOkapiTokenText);
-        springLayoutPanelOc.putConstraint(
-                SpringLayout.WEST, labelOkapiToken, 101, SpringLayout.EAST, labelOkapiTokenText);
-        panelOc.add(labelOkapiToken);
+        panelOcInner.add(labelOkapiToken);
+        panelOcInner.add(new JLabel());
 
         buttonRequestNewToken = new JButton("Request new token");
-        springLayoutPanelOc.putConstraint(
-                SpringLayout.SOUTH, buttonRequestNewToken, 0, SpringLayout.SOUTH, panelOc);
-        springLayoutPanelOc.putConstraint(
-                SpringLayout.EAST, buttonRequestNewToken, 0, SpringLayout.EAST, panelOc);
         buttonRequestNewToken.addActionListener(
                 new ActionListener() {
                     public void actionPerformed(ActionEvent actionEvent) {
@@ -158,58 +163,27 @@ public class SettingsDialog extends JDialog {
                         }
                     }
                 });
-        panelOc.add(buttonRequestNewToken);
+        panelOcInner.add(buttonRequestNewToken);
 
-        final JLabel labelUsernameOcText = new JLabel("OC Username: ");
-        springLayoutPanelOc.putConstraint(
-                SpringLayout.NORTH,
-                labelUsernameOcText,
-                6,
-                SpringLayout.SOUTH,
-                labelOkapiTokenText);
-        springLayoutPanelOc.putConstraint(
-                SpringLayout.WEST, labelUsernameOcText, 0, SpringLayout.WEST, labelOkapiTokenText);
-        panelOc.add(labelUsernameOcText);
+        final JLabel labelUsernameOcText = new JLabel("OC Username:   ", JLabel.RIGHT);
+        panelOcInner.add(labelUsernameOcText);
 
         labelUsernameOc = new JLabel("");
-        springLayoutPanelOc.putConstraint(
-                SpringLayout.NORTH, labelUsernameOc, 6, SpringLayout.SOUTH, labelOkapiToken);
-        springLayoutPanelOc.putConstraint(
-                SpringLayout.WEST, labelUsernameOc, 204, SpringLayout.WEST, panelOc);
-        springLayoutPanelOc.putConstraint(
-                SpringLayout.EAST, labelUsernameOc, -31, SpringLayout.EAST, panelOc);
         labelUsernameOc.setHorizontalAlignment(SwingConstants.LEFT);
         labelUsernameOc.setText(Settings.getString(Settings.Key.OC_USERNAME));
-        panelOc.add(labelUsernameOc);
+        panelOcInner.add(labelUsernameOc);
 
-        final JPanel panelGc = new JPanel();
+        final JPanel panelGc = new JPanel(new BorderLayout());
+        final JPanel panelGcInner = new JPanel(new GridLayout(3, 1));
         tabbedPane.addTab("geocaching.com", null, panelGc, null);
-        final GridBagLayout gblPanelGc = new GridBagLayout();
-        gblPanelGc.columnWidths = new int[] {215, 215, 0};
-        gblPanelGc.rowHeights = new int[] {201, 0};
-        gblPanelGc.columnWeights = new double[] {0.0, 0.0, Double.MIN_VALUE};
-        gblPanelGc.rowWeights = new double[] {0.0, Double.MIN_VALUE};
-        panelGc.setLayout(gblPanelGc);
+        panelGc.setBackground(Color.white);
+        panelGc.setBorder(new EmptyBorder(10, 10, 10, 10));
+        panelGc.add(panelGcInner, BorderLayout.NORTH);
+        panelGcInner.setBackground(Color.white);
 
-        final JLabel labelUsername = new JLabel("Username:");
-        final GridBagConstraints gbcLabelUsername = new GridBagConstraints();
-        gbcLabelUsername.gridwidth = 50;
-        gbcLabelUsername.anchor = GridBagConstraints.NORTHWEST;
-        gbcLabelUsername.insets = new Insets(20, 20, 0, 5);
-        gbcLabelUsername.gridx = 0;
-        gbcLabelUsername.gridy = 0;
-        panelGc.add(labelUsername, gbcLabelUsername);
-
-        textUsernameGc = new JTextField();
-        final GridBagConstraints gbcTextUsernameGc = new GridBagConstraints();
-        gbcTextUsernameGc.weighty = 0.5;
-        gbcTextUsernameGc.insets = new Insets(20, 0, 0, 0);
-        gbcTextUsernameGc.anchor = GridBagConstraints.NORTH;
-        gbcTextUsernameGc.fill = GridBagConstraints.HORIZONTAL;
-        gbcTextUsernameGc.gridx = 1;
-        gbcTextUsernameGc.gridy = 0;
-        panelGc.add(textUsernameGc, gbcTextUsernameGc);
-        textUsernameGc.setColumns(10);
+        final JLabel labelUsername = new JLabel("Username: ");
+        panelGcInner.add(labelUsername);
+        panelGcInner.add(textUsernameGc);
 
         displayOkapiTokenStatus();
         textUsernameGc.setText(Settings.getString(Settings.Key.GC_USERNAME));
@@ -221,6 +195,7 @@ public class SettingsDialog extends JDialog {
         gblPanelGeneral.rowWeights = new double[] {0.0, 0.0, 0.0, 0.0, 0.0};
         gblPanelGeneral.columnWeights = new double[] {1.0, 1.0, 0.0};
         panelGeneral.setLayout(gblPanelGeneral);
+        panelGeneral.setBackground(Color.white);
 
         final Component verticalStrut1 = Box.createVerticalStrut(20);
         final GridBagConstraints gbcVerticalStrut1 = new GridBagConstraints();
@@ -287,10 +262,36 @@ public class SettingsDialog extends JDialog {
         gbcLabelCurrentHeapSizeText.gridx = 0;
         gbcLabelCurrentHeapSizeText.gridy = 1;
         panelGeneral.add(labelCurrentHeapSizeText, gbcLabelCurrentHeapSizeText);
+        
+        final JPanel panelNetwork = new JPanel(new BorderLayout());
+        final JPanel panelNetworkInner = new JPanel(new GridLayout(4, 1));
+        panelNetworkInner.setBackground(Color.white);
+        panelNetwork.setBorder(new EmptyBorder(10, 10, 10, 10));
+        panelNetwork.setBackground(Color.white);
+        panelNetwork.add(panelNetworkInner, BorderLayout.NORTH);
+        
+        textProxyHost.setText(Settings.getString(Settings.Key.PROXY_HOST));
+        textProxyPort.setText(Settings.getString(Settings.Key.PROXY_PORT));
+        checkUpdates.setSelected(Settings.getString(Settings.Key.CHECK_UPDATES) != "n");
+        checkUpdates.setBackground(Color.white);
+        
+        panelNetworkInner.add(new JLabel("Proxy Host & Port:"));
+        JPanel proxyPanel = new JPanel(new BorderLayout());
+        proxyPanel.add(textProxyHost, BorderLayout.CENTER);
+        proxyPanel.add(textProxyPort, BorderLayout.EAST);
+        panelNetworkInner.add(proxyPanel);
+        //panelNetworkInner.add(new JLabel("Example: http://myproxy:8080"));
+        panelNetworkInner.add(new JLabel());
+        panelNetworkInner.add(checkUpdates);
+        tabbedPane.addTab("Network", null, panelNetwork, null);
+        
+        pack();
     }
 
     private void displayOkapiTokenStatus() {
         labelOkapiToken.setText("missing or offline");
+        labelOkapiToken.setIcon(new ImageIcon(new ImageIcon(getClass().getClassLoader().getResource("icons/nok.png"))
+                .getImage().getScaledInstance(32, 32, Image.SCALE_SMOOTH)));
         Font font = labelOkapiToken.getFont();
         labelOkapiToken.setFont(font.deriveFont(font.getStyle() | Font.ITALIC));
         buttonRequestNewToken.setVisible(true);
@@ -298,9 +299,10 @@ public class SettingsDialog extends JDialog {
         final User user = User.getOKAPIUser();
         try {
             if (user.getOkapiToken() != null && Okapi.getUuid(user) != null) {
-                labelOkapiToken.setText("okay");
+                labelOkapiToken.setIcon(new ImageIcon(new ImageIcon(getClass().getClassLoader().getResource("icons/okay.png"))
+                        .getImage().getScaledInstance(32, 32, Image.SCALE_SMOOTH)));
                 font = labelOkapiToken.getFont();
-                labelOkapiToken.setFont(font.deriveFont(font.getStyle() & ~Font.ITALIC));
+                labelOkapiToken.setText("");
                 buttonRequestNewToken.setVisible(false);
 
                 final String username = Okapi.getUsername(user);

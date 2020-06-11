@@ -16,6 +16,7 @@ import cmanager.network.Updates;
 import cmanager.okapi.Okapi;
 import cmanager.okapi.User;
 import cmanager.settings.Settings;
+import cmanager.settings.Settings.Key;
 import cmanager.util.DesktopUtil;
 import java.awt.BorderLayout;
 import java.awt.Component;
@@ -23,6 +24,7 @@ import java.awt.Dialog;
 import java.awt.Dialog.ModalityType;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ContainerEvent;
@@ -34,6 +36,8 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JDesktopPane;
@@ -77,7 +81,9 @@ public class MainWindow extends JFrame {
 
         menuWindows = new JMenu("Windows");
 
-        final JMenuItem menuItemOpen = new JMenuItem("Open");
+        final JMenuItem menuItemOpen = new JMenuItem("Open", 
+                new ImageIcon(new ImageIcon(getClass().getClassLoader().getResource("icons/open.png"))
+                        .getImage().getScaledInstance(16, 16, Image.SCALE_SMOOTH)));
         menuItemOpen.setAccelerator(KeyStroke.getKeyStroke('O', Compatibility.SHORTCUT_KEY_MASK));
         menuItemOpen.addActionListener(
                 new ActionListener() {
@@ -86,7 +92,9 @@ public class MainWindow extends JFrame {
                     }
                 });
 
-        final JMenuItem menuItemNew = new JMenuItem("New");
+        final JMenuItem menuItemNew = new JMenuItem("New", 
+                new ImageIcon(new ImageIcon(getClass().getClassLoader().getResource("icons/new.png"))
+                        .getImage().getScaledInstance(16, 16, Image.SCALE_SMOOTH)));
         menuItemNew.setAccelerator(KeyStroke.getKeyStroke('N', Compatibility.SHORTCUT_KEY_MASK));
         menuItemNew.addActionListener(
                 new ActionListener() {
@@ -113,7 +121,9 @@ public class MainWindow extends JFrame {
                     }
                 });
 
-        final JMenuItem menuItemSettings = new JMenuItem("Settings");
+        final JMenuItem menuItemSettings = new JMenuItem("Settings", 
+                new ImageIcon(new ImageIcon(getClass().getClassLoader().getResource("icons/settings.png"))
+                        .getImage().getScaledInstance(16, 16, Image.SCALE_SMOOTH)));
         menuItemSettings.addActionListener(
                 new ActionListener() {
                     public void actionPerformed(ActionEvent actionEvent) {
@@ -124,7 +134,9 @@ public class MainWindow extends JFrame {
                     }
                 });
 
-        final JMenuItem menuItemSave = new JMenuItem("Save");
+        final JMenuItem menuItemSave = new JMenuItem("Save", 
+                new ImageIcon(new ImageIcon(getClass().getClassLoader().getResource("icons/save.png"))
+                        .getImage().getScaledInstance(16, 16, Image.SCALE_SMOOTH)));
         menuItemSave.setAccelerator(KeyStroke.getKeyStroke('S', Compatibility.SHORTCUT_KEY_MASK));
         menuItemSave.addActionListener(
                 new ActionListener() {
@@ -157,7 +169,9 @@ public class MainWindow extends JFrame {
         menuList.setEnabled(false);
         menuBar.add(menuList);
 
-        final JMenuItem menuItemFindOnOc = new JMenuItem("Find on OC");
+        final JMenuItem menuItemFindOnOc = new JMenuItem("Find on OC", 
+                new ImageIcon(new ImageIcon(getClass().getClassLoader().getResource("icons/search.png"))
+                        .getImage().getScaledInstance(16, 16, Image.SCALE_SMOOTH)));
         menuItemFindOnOc.addActionListener(
                 new ActionListener() {
                     public void actionPerformed(ActionEvent actionEvent) {
@@ -166,7 +180,9 @@ public class MainWindow extends JFrame {
                 });
         menuList.add(menuItemFindOnOc);
 
-        final JMenuItem menuItemSyncWithOc = new JMenuItem("Sync with OC");
+        final JMenuItem menuItemSyncWithOc = new JMenuItem("Sync with OC", 
+                new ImageIcon(new ImageIcon(getClass().getClassLoader().getResource("icons/sync.png"))
+                        .getImage().getScaledInstance(16, 16, Image.SCALE_SMOOTH)));
         menuItemSyncWithOc.addActionListener(
                 new ActionListener() {
                     public void actionPerformed(ActionEvent actionEvent) {
@@ -199,7 +215,9 @@ public class MainWindow extends JFrame {
         final JSeparator separator2 = new JSeparator();
         menuList.add(separator2);
 
-        final JMenuItem menuItemCopy = new JMenuItem("Copy");
+        final JMenuItem menuItemCopy = new JMenuItem("Copy", 
+                new ImageIcon(new ImageIcon(getClass().getClassLoader().getResource("icons/copy.png"))
+                        .getImage().getScaledInstance(16, 16, Image.SCALE_SMOOTH)));
         menuItemCopy.setAccelerator(KeyStroke.getKeyStroke('C', Compatibility.SHORTCUT_KEY_MASK));
         menuItemCopy.addActionListener(
                 new ActionListener() {
@@ -238,7 +256,9 @@ public class MainWindow extends JFrame {
         menuList.add(separator6);
         menuList.add(menuItemCopy);
 
-        final JMenuItem menuItemPaste = new JMenuItem("Paste");
+        final JMenuItem menuItemPaste = new JMenuItem("Paste", 
+                new ImageIcon(new ImageIcon(getClass().getClassLoader().getResource("icons/paste.png"))
+                        .getImage().getScaledInstance(16, 16, Image.SCALE_SMOOTH)));
         menuItemPaste.setAccelerator(KeyStroke.getKeyStroke('V', Compatibility.SHORTCUT_KEY_MASK));
         menuItemPaste.addActionListener(
                 new ActionListener() {
@@ -247,7 +267,9 @@ public class MainWindow extends JFrame {
                     }
                 });
 
-        final JMenuItem menuItemCut = new JMenuItem("Cut");
+        final JMenuItem menuItemCut = new JMenuItem("Cut", 
+                new ImageIcon(new ImageIcon(getClass().getClassLoader().getResource("icons/cut.png"))
+                        .getImage().getScaledInstance(16, 16, Image.SCALE_SMOOTH)));
         menuItemCut.setAccelerator(KeyStroke.getKeyStroke('X', Compatibility.SHORTCUT_KEY_MASK));
         menuItemCut.addActionListener(
                 new ActionListener() {
@@ -258,7 +280,9 @@ public class MainWindow extends JFrame {
         menuList.add(menuItemCut);
         menuList.add(menuItemPaste);
 
-        final JMenuItem menuItemDeleteSelectedCaches = new JMenuItem("Delete");
+        final JMenuItem menuItemDeleteSelectedCaches = new JMenuItem("Delete", 
+                new ImageIcon(new ImageIcon(getClass().getClassLoader().getResource("icons/delete.png"))
+                        .getImage().getScaledInstance(16, 16, Image.SCALE_SMOOTH)));
         menuItemDeleteSelectedCaches.setAccelerator(
                 KeyStroke.getKeyStroke('D', Compatibility.SHORTCUT_KEY_MASK));
         menuItemDeleteSelectedCaches.addActionListener(
@@ -273,7 +297,9 @@ public class MainWindow extends JFrame {
         final JSeparator separator7 = new JSeparator();
         menuList.add(separator7);
 
-        final JMenuItem menuItemUndo = new JMenuItem("Undo");
+        final JMenuItem menuItemUndo = new JMenuItem("Undo", 
+                new ImageIcon(new ImageIcon(getClass().getClassLoader().getResource("icons/undo.png"))
+                        .getImage().getScaledInstance(16, 16, Image.SCALE_SMOOTH)));
         menuItemUndo.setAccelerator(KeyStroke.getKeyStroke('Z', Compatibility.SHORTCUT_KEY_MASK));
         menuItemUndo.addActionListener(
                 new ActionListener() {
@@ -406,7 +432,9 @@ public class MainWindow extends JFrame {
         menuBar.add(menuWindows);
 
         final JMenu menuInfo = new JMenu("Information");
-        final JMenuItem menuItemAbout = new JMenuItem("About");
+        final JMenuItem menuItemAbout = new JMenuItem("About", 
+                new ImageIcon(new ImageIcon(getClass().getClassLoader().getResource("icons/info.png"))
+                        .getImage().getScaledInstance(16, 16, Image.SCALE_SMOOTH)));
         menuItemAbout.addActionListener(
                 new ActionListener() {
                     public void actionPerformed(ActionEvent actionEvent) {
@@ -470,32 +498,34 @@ public class MainWindow extends JFrame {
                 });
         panelUpdate.add(buttonUpdate);
 
-        new SwingWorker<Void, Boolean>() {
-            @Override
-            protected Void doInBackground() {
-                publish(Updates.updateAvailable_block());
-                return null;
-            }
-
-            @Override
-            protected void process(List<Boolean> chunks) {
-                // Display update message if there is another version available.
-                if (chunks.get(0)) {
-                    setText(
-                            "Version "
-                                    + Updates.getNewVersion()
-                                    + " of "
-                                    + Constants.APP_NAME
-                                    + " is available. Click here for updates!");
-                    buttonUpdate.setVisible(true);
+        if (Settings.getString(Key.CHECK_UPDATES) != "n") {
+            new SwingWorker<Void, Boolean>() {
+                @Override
+                protected Void doInBackground() {
+                    publish(Updates.updateAvailable_block());
+                    return null;
                 }
-            }
-
-            private void setText(String text) {
-                buttonUpdate.setText(
-                        "<HTML><FONT color=\"#008000\"><U>" + text + "</U></FONT></HTML>");
-            }
-        }.execute();
+    
+                @Override
+                protected void process(List<Boolean> chunks) {
+                    // Display update message if there is another version available.
+                    if (chunks.get(0)) {
+                        setText(
+                                "Version "
+                                        + Updates.getNewVersion()
+                                        + " of "
+                                        + Constants.APP_NAME
+                                        + " is available. Click here for updates!");
+                        buttonUpdate.setVisible(true);
+                    }
+                }
+    
+                private void setText(String text) {
+                    buttonUpdate.setText(
+                            "<HTML><FONT color=\"#008000\"><U>" + text + "</U></FONT></HTML>");
+                }
+            }.execute();
+        }
 
         final JPanel panelNorth = new JPanel();
         contentPane.add(panelNorth, BorderLayout.NORTH);

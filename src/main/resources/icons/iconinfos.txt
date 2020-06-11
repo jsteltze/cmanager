@@ -1,0 +1,5 @@
+search.png,sync.png : FatiCons (by Designerz Base)
+
+copy.png,cut.png,delete.png,info.png,new.png,open.png,paste.png,props.png,save.png,settings.png : Common Toolbar (by GlyphLab)
+
+okay.png,nok.png : Flat Actions (by I Have No Desk)

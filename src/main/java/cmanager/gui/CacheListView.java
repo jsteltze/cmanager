@@ -3,6 +3,7 @@ package cmanager.gui;
 import cmanager.CacheListController;
 import cmanager.CacheListFilterModel;
 import cmanager.CacheListModel;
+import cmanager.CacheListModel.CacheListTableModel;
 import cmanager.geo.Geocache;
 import cmanager.geo.GeocacheType;
 import cmanager.global.Compatibility;
@@ -14,10 +15,15 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
+import java.awt.Image;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
@@ -25,6 +31,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JInternalFrame;
 import javax.swing.JLabel;
@@ -35,6 +42,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
 import javax.swing.JSplitPane;
 import javax.swing.JTable;
+import javax.swing.JTextField;
 import javax.swing.JToggleButton;
 import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
@@ -49,9 +57,11 @@ import org.openstreetmap.gui.jmapviewer.JMapViewer;
 import org.openstreetmap.gui.jmapviewer.MapMarkerDot;
 import org.openstreetmap.gui.jmapviewer.interfaces.MapMarker;
 
-public class CacheListView extends JInternalFrame {
+public class CacheListView extends JInternalFrame implements FocusListener, KeyListener {
 
     private static final long serialVersionUID = -3610178481183679565L;
+    
+    private static final String SEARCH_FIELD_TEXT = "GC-Code / Title / Owner";
 
     private final CacheListController cacheListController;
     private final JTable table;
@@ -60,6 +70,8 @@ public class CacheListView extends JInternalFrame {
     private final JLabel lblWaypointsCount;
     private final CustomJMapViewer mapViewer;
     private final JPanel panelFilters;
+    private final JTextField quickSearchField = new JTextField(SEARCH_FIELD_TEXT, 20);
+    private final JLabel quickSearchLabel = new JLabel("Quick search: ");
 
     private Point popupPoint;
 
@@ -103,10 +115,22 @@ public class CacheListView extends JInternalFrame {
                         JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
                         JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         scrollPane.setMinimumSize(new Dimension(300, 300));
+        
+        JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
+        JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        quickSearchField.setForeground(Color.lightGray);
+        quickSearchField.addFocusListener(this);
+        quickSearchField.addKeyListener(this);
+        searchPanel.add(new JLabel(new ImageIcon(new ImageIcon(getClass().getClassLoader().getResource("icons/search.png"))
+                .getImage().getScaledInstance(16, 16, Image.SCALE_DEFAULT))));
+        searchPanel.add(quickSearchLabel);
+        searchPanel.add(quickSearchField);
+        mainPanel.add(scrollPane, BorderLayout.CENTER);
+        mainPanel.add(searchPanel, BorderLayout.NORTH);
 
         final JSplitPane splitPane1 = new JSplitPane();
         getContentPane().add(splitPane1, BorderLayout.CENTER);
-        splitPane1.setLeftComponent(scrollPane);
+        splitPane1.setLeftComponent(mainPanel);
 
         final JSplitPane splitPane2 = new JSplitPane();
         splitPane1.setRightComponent(splitPane2);
@@ -290,7 +314,7 @@ public class CacheListView extends JInternalFrame {
         toggleButtonList.addActionListener(
                 new ActionListener() {
                     public void actionPerformed(ActionEvent actionEvent) {
-                        scrollPane.setVisible(toggleButtonList.isSelected());
+                        mainPanel.setVisible(toggleButtonList.isSelected());
                         fixSplitPanes(splitPane1, splitPane2);
                     }
                 });
@@ -366,6 +390,18 @@ public class CacheListView extends JInternalFrame {
         table.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT)
                 .getParent()
                 .remove(KeyStroke.getKeyStroke('Z', Compatibility.SHORTCUT_KEY_MASK));
+        
+        /*
+         * make sure the text field does not have focus on start-up
+         */
+        quickSearchField.setFocusable(false);
+        quickSearchField.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent event) {
+                quickSearchField.setFocusable(true);
+                quickSearchField.requestFocus();
+            }
+        });
     }
 
     public void updateCachePanelToSelection() {
@@ -660,5 +696,53 @@ public class CacheListView extends JInternalFrame {
 
     public interface RunLocationDialogI {
         void openDialog(Geocache geocache);
+    }
+
+    @Override
+    public void focusGained(FocusEvent e) {
+        if (quickSearchField.getText().equals(SEARCH_FIELD_TEXT)) {
+            quickSearchField.setText("");
+            quickSearchField.setForeground(Color.black);
+        }
+    }
+
+    @Override
+    public void focusLost(FocusEvent e) {  
+        if (quickSearchField.getText().isEmpty()) {
+            quickSearchField.setText(SEARCH_FIELD_TEXT);
+            quickSearchField.setForeground(Color.lightGray);
+        }
+    }
+
+    @Override
+    public void keyTyped(KeyEvent e) {
+        
+    }
+
+    @Override
+    public void keyPressed(KeyEvent e) {
+
+    }
+
+    @Override
+    public void keyReleased(KeyEvent e) {
+        System.out.println("keyTyped: " + quickSearchField.getText());
+        CacheListTableModel tableModel = (CacheListTableModel) table.getModel();
+        
+        String searchText = quickSearchField.getText().toLowerCase();
+        
+        // first remove all rows
+        for (int i = 0; i < tableModel.getRowCount(); i++) {
+            if (tableModel.getValueAt(i, 0).toString().toLowerCase().contains(searchText)
+                    || tableModel.getValueAt(i, 1).toString().toLowerCase().contains(searchText)
+                    || tableModel.getValueAt(i, 7).toString().toLowerCase().contains(searchText)) {
+                table.setRowSelectionInterval(i, i);
+                table.scrollRectToVisible(table.getCellRect(i, 0, true));
+                return;
+            }
+                
+        }
+        
+        table.clearSelection();
     }
 }
